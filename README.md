@@ -1,171 +1,149 @@
-# Aryan Heidari — Personal Portfolio
+# Aryan Heidari — Arima Finance Portfolio
 
-A static, dependency-free portfolio site for Aryan Heidari (quantitative finance, financial
-research, risk management, and the Arima Finance Engine project). Plain HTML5, CSS3, and a
-small vanilla-JS file. No build step, no backend, no analytics, no tracking, no cookie banner.
+Static multi-page website for Aryan Heidari and Arima Finance, covering professional
+profile, public-safe project work, research records and document availability.
 
-## 1. Local preview
+- **Production domain:** <https://arimafinance.xyz>
+- **GitHub:** <https://github.com/arima7576/aryan-portfolio>
+- **Technology:** semantic HTML, CSS and small dependency-free JavaScript
+- **Build step:** none
 
-No build tools required.
+## Deployment
+
+```text
+GitHub main
+    ↓
+Cloudflare automatic deployment
+    ↓
+https://arimafinance.xyz
+```
+
+Cloudflare Workers serves the repository as static assets. Do not configure a build
+command or commit generated output. DNS and nameserver management are outside this
+repository.
+
+## Local preview
 
 ```bash
-# Option A — just open it
-open index.html            # macOS
-start index.html           # Windows
-xdg-open index.html        # Linux
-
-# Option B — simple local server (recommended, avoids any file:// quirks)
 python3 -m http.server 8000
-# then visit http://localhost:8000
 ```
 
-## 2. File structure
+Open <http://localhost:8000>. No package installation or build step is required.
 
-```
-/
+## Structure
+
+```text
+.
 ├── index.html
 ├── about.html
 ├── experience.html
 ├── projects.html
 ├── projects/
-│   └── arima-finance-engine.html
+│   ├── arima-finance-engine.html
+│   ├── investment-memorandum.html
+│   └── artane-presentation.html
 ├── research.html
 ├── publications.html
 ├── downloads.html
 ├── contact.html
+├── assets/
+│   ├── icons/
+│   ├── images/
+│   └── documents/
 ├── styles.css
 ├── script.js
-├── README.md
-├── CNAME                     # placeholder — see "Custom domain" below
-├── .gitignore
-└── assets/
-    ├── images/               # portrait.jpg is included; og-image is a placeholder
-    ├── icons/                # favicon-placeholder.svg
-    └── documents/
-        ├── cv/
-        ├── handbook/
-        ├── research/
-        └── presentations/
+├── robots.txt
+├── sitemap.xml
+└── CNAME
 ```
 
-## 3. How to update content
+## Configurable public links
 
-All page copy lives directly in the HTML files — there is no CMS or data file, by design
-(no backend, no build step). Each page shares the same header/nav and footer markup; if you
-change the nav, update it in every page (or regenerate — see "Regenerating pages" below).
+Keep these values consistent across every page:
+
+| Purpose | Public value |
+|---|---|
+| Domain | `https://arimafinance.xyz` |
+| Professional email | `aryan.hd@outlook.com` |
+| GitHub profile | `https://github.com/arima7576` |
+| Engine repository | `https://github.com/arima7576/Arima-Finance-Engine` |
+| Engine release | `https://github.com/arima7576/Arima-Finance-Engine/releases/tag/v0.1.0` |
+| LinkedIn | Available soon — verified public profile required |
+| Primary SSRN record | `https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5127689` |
+| CV | Available soon |
+| Handbook | Available soon |
+
+Never publish an admin/dashboard URL or a link requiring private account access.
+
+## Updating content
 
 ### Add a project
-1. Duplicate `projects/arima-finance-engine.html` as a template for structure (Overview,
-   Architecture, Public vs Private Boundary, Limitations, Licence & Risk Notice sections).
-2. Add a card for it in `projects.html`.
-3. If it should be featured, add a card to the "Featured Work" section of `index.html`.
 
-### Add a research paper / publication
-1. Add a `.card` block in `research.html` (and, if relevant, `publications.html`) with:
-   title, date, one-paragraph summary, category badge, and links (SSRN / ResearchGate / PDF).
-2. Set the confidentiality label badge: `Published`, `Working Paper`, `Public Summary`,
-   `Selected Extract`, `Confidential — Not Available`.
+1. Add a page under `projects/` using an existing project page as the structural guide.
+2. Add a card to `projects.html`.
+3. Add it to the homepage only if it belongs in the four-item Featured Work section.
+4. Add a clear publication and confidentiality label.
 
-### Add a presentation
-1. Place the PDF in `assets/documents/presentations/`.
-2. Add a row/card with title, category, date, and view/download links in `downloads.html`.
+### Add research
 
-### Add a PDF (CV, handbook, research, presentations)
-1. Drop the file into the matching `assets/documents/<type>/` folder.
-2. Update the matching row in `downloads.html`: replace the `Available soon` badge with
-   `Published`, and change the disabled "View" control into a real link to the file.
+1. Verify the title, author, platform, public URL and publication status.
+2. Add the record to `research.html` and `publications.html`.
+3. Link a PDF only when the PDF is actually tracked and approved for publication.
+4. Do not describe an SSRN working paper or preprint as peer reviewed unless verified.
 
-### Replace a placeholder
-Search the codebase for `Available soon`, `placeholder`, and `pending` — these mark every
-spot waiting on real content, a real link, or a real document.
+### Add a PDF
 
-## 4. Deployment
+1. Place the reviewed file in the correct `assets/documents/` category.
+2. Replace **Available soon** in `downloads.html` only after the path exists.
+3. Provide both View and Download actions where the document is locally available.
+4. Re-run the confidentiality and link checks below.
 
-**Do not deploy until the content and confidentiality review below is complete.**
+## Confidentiality checklist
 
-### GitHub Pages
-1. Push this repository to GitHub.
-2. Repository Settings → Pages → Source: deploy from the `main` branch, root folder.
-3. Your site will be live at `https://<username>.github.io/<repo>/`.
+- [ ] No phone number, private address, immigration or legal information
+- [ ] No credentials, account numbers, tokens or private account URLs
+- [ ] No private company or client identity without written approval
+- [ ] No transaction terms, data-room content or unpublished financial figures
+- [ ] No proprietary strategy rules, thresholds, formulas or configuration
+- [ ] No confidential employer comments or source documents
+- [ ] Every restricted item is visibly labelled
+- [ ] All PDFs have been reviewed independently from their filenames
 
-### Cloudflare Pages
-1. Connect the GitHub repository in the Cloudflare Pages dashboard.
-2. Build command: none. Output directory: `/` (repository root).
-3. Deploy.
+## Deployment checklist
 
-### Custom domain
-1. Replace the placeholder text inside `CNAME` with your domain (e.g. `aryanheidari.com`) —
-   GitHub Pages reads this file automatically.
-2. Point your domain's DNS to GitHub Pages / Cloudflare Pages per their instructions.
-3. Update the `canonical` and `og:url` meta tags across all pages from
-   `https://example.com/PLACEHOLDER-DOMAIN/` to your real domain.
+- [ ] `CNAME` contains exactly `arimafinance.xyz`
+- [ ] Every canonical and Open Graph URL uses `https://arimafinance.xyz`
+- [ ] Local HTML, asset and PDF links resolve
+- [ ] Navigation works at desktop and mobile widths
+- [ ] Keyboard focus and Escape-to-close navigation work
+- [ ] `python3 -m http.server 8000` serves every page
+- [ ] `main` is clean and up to date before push
 
-## 5. Confidentiality checklist (run before every publish)
+## Publication checklist
 
-- [ ] No private phone numbers, home address, or immigration information
-- [ ] No account numbers or payment details
-- [ ] No private client names without explicit permission
-- [ ] No proprietary trading rules, formulas, or live operational thresholds
-- [ ] No confidential employer material (e.g. named data-room documents, transaction terms)
-- [ ] No unpublished financial figures
-- [ ] Every non-public work item carries a confidentiality label
-- [ ] LinkedIn link is a **public profile URL**, not an admin/dashboard link (see note below)
+- [ ] Claims are supported by public or owner-verified information
+- [ ] Research status does not imply unverified peer review
+- [ ] Missing content is labelled **Available soon** without a broken link
+- [ ] Confidential engagements expose only contribution and methodology
+- [ ] Secret and sensitive-content scans return no findings
+- [ ] Cloudflare deployment completes after the GitHub push
 
-## 6. Publication checklist
+## Unresolved placeholders
 
-- [ ] Every "Available soon" item is either filled in or intentionally left as-is
-- [ ] Every external link (GitHub, SSRN, ResearchGate, LinkedIn) opens the intended page
-- [ ] CV and handbook PDFs are the current version
-- [ ] Dates, employers, and credentials match the verified CV — nothing invented
+- Verified public LinkedIn profile URL
+- Current public CV PDF
+- Arima Finance Engine public handbook PDF
+- Approved Artane presentation preview, if permission is granted
+- Any approved public-safe Investment Memorandum extract
+- Additional research record referenced in prior notes, if verified
 
-## 7. Accessibility checklist
+## Documents still needed from Aryan
 
-- [ ] Heading order is sequential on every page (h1 → h2 → h3)
-- [ ] All images have descriptive alt text
-- [ ] Mobile nav is operable by keyboard and screen reader (skip link included)
-- [ ] Focus states are visible (test with Tab key)
-- [ ] Reduced-motion is respected (the hero pipeline animation halts under
-      `prefers-reduced-motion: reduce`)
+- Current public CV
+- Public Arima Finance Engine handbook
+- Approved research PDFs, where direct downloads are desired
+- Approved presentation previews
+- Any synthetic or publication-approved case study
 
-## 8. Final review checklist
-
-- [ ] Content reviewed from the perspective of: recruiter, quant hiring manager, hedge-fund
-      CTO, fintech founder, academic researcher, design reviewer, security reviewer
-- [ ] No unsupported claims ("world-class", "leading expert", "guaranteed returns", etc.)
-- [ ] No fabricated performance figures or track record claims
-- [ ] Mobile layout checked at ~375px width
-- [ ] All of the above checklists are complete
-
----
-
-## Known items still needed from Aryan
-
-**Links**
-- A public LinkedIn profile (or company page) URL. The link supplied during this build
-  (`linkedin.com/company/111923099/admin/dashboard/...`) is a private admin dashboard, not a
-  shareable public page, so it has **not** been published anywhere on the site. The Contact
-  page currently shows "Available soon" for LinkedIn.
-- A fourth SSRN/DeFi paper link (profile notes four published papers; only two SSRN links and
-  one ResearchGate link were supplied).
-
-**Documents**
-- CV (PDF) → `assets/documents/cv/`
-- Arima Finance Engine Handbook (PDF) → `assets/documents/handbook/`
-- Any presentations → `assets/documents/presentations/`
-- Any public-safe Investment Memorandum sample → `assets/documents/research/`
-- A 1200×630 Open Graph share image → `assets/images/`
-- A real favicon (SVG or ICO) → `assets/icons/`
-
-**Verified detail**
-- Exact dates for the Arima Finance and Artane Partners roles (currently shown without
-  invented dates)
-- Undergraduate degree details, if applicable
-- Domain name, once chosen (`CNAME` file + canonical/OG URLs)
-
-## Confidentiality note on Artane Partners work
-
-The Artane Partners internship is described only at a generic level — role, sector, and type
-of financial-modelling work. Specific engagement names, client identities, and transaction
-detail were **intentionally excluded**, since that material belongs to Artane Partners and
-its clients, not to this personal site. If Aryan wants richer detail here, it should first be
-cleared with Artane Partners for public disclosure.
+Confidential source documents should never be copied into this repository merely to
+prepare a public summary.

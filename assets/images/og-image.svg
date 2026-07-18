@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Aryan Heidari — Arima Finance</title>
+  <desc id="description">Professional portfolio for quantitative finance, investment analysis and financial technology.</desc>
+  <rect width="1200" height="630" fill="#0a1120"/>
+  <g opacity=".28" stroke="#5c86f0">
+    <path d="M0 105h1200M0 210h1200M0 315h1200M0 420h1200M0 525h1200"/>
+    <path d="M150 0v630M300 0v630M450 0v630M600 0v630M750 0v630M900 0v630M1050 0v630"/>
+  </g>
+  <rect x="90" y="92" width="1020" height="446" rx="24" fill="#101b30" stroke="#263957"/>
+  <text x="150" y="220" fill="#c7a360" font-family="Arial, sans-serif" font-size="28" letter-spacing="5">ARIMA FINANCE</text>
+  <text x="150" y="326" fill="#e9ecf3" font-family="Arial, sans-serif" font-size="64" font-weight="700">Aryan Heidari</text>
+  <text x="150" y="395" fill="#8b95ac" font-family="Arial, sans-serif" font-size="30">Quantitative Finance · Investment Analysis · Financial Technology</text>
+  <path d="M150 456h180" stroke="#5c86f0" stroke-width="6" stroke-linecap="round"/>
+</svg>

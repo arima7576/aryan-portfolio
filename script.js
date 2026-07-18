@@ -10,6 +10,11 @@
   var links = document.querySelector(".nav-links");
 
   if (toggle && links) {
+    function closeMenu() {
+      links.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+
     toggle.addEventListener("click", function () {
       var isOpen = links.classList.toggle("open");
       toggle.setAttribute("aria-expanded", String(isOpen));
@@ -18,9 +23,21 @@
     // Close menu when a link is chosen (mobile)
     links.querySelectorAll("a").forEach(function (a) {
       a.addEventListener("click", function () {
-        links.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
+        closeMenu();
       });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && links.classList.contains("open")) {
+        closeMenu();
+        toggle.focus();
+      }
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!links.contains(event.target) && !toggle.contains(event.target)) {
+        closeMenu();
+      }
     });
   }
 
