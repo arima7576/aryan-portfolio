@@ -24,10 +24,10 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   await openFilm(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  expect(maxScroll).toBeGreaterThanOrEqual(6_500);
+  expect(maxScroll).toBeGreaterThanOrEqual(13_500);
 
   const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
-  for (const progress of [0, .2, .4, .6, .8, 1]) {
+  for (const progress of [0, .1, .2, .3, .4, .5]) {
     await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
     await page.waitForTimeout(1_300);
     states.push(await page.evaluate((value) => ({
@@ -46,11 +46,43 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   expect(Number(states[5].name)).toBeGreaterThan(.99);
 });
 
-test("reduced motion reveals a readable static identity", async ({ page }) => {
+test("Phase 2 continues through rotation, districts and destination", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop Phase 2 state validation");
+  await openFilm(page);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  const seek = async (phase: number) => {
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (.5 + phase / 200));
+    await page.waitForTimeout(1_300);
+  };
+
+  await seek(25);
+  const quarterTurn = await page.locator(".rotation-chamber").evaluate((node) => getComputedStyle(node).transform);
+  await seek(35);
+  const halfTurn = await page.locator(".rotation-chamber").evaluate((node) => getComputedStyle(node).transform);
+  await seek(55);
+  const fullTurn = await page.locator(".rotation-chamber").evaluate((node) => getComputedStyle(node).transform);
+  expect(new Set([quarterTurn, halfTurn, fullTurn]).size).toBe(3);
+
+  await seek(67);
+  await expect(page.getByText("HSBC", { exact: true })).toBeVisible();
+  await expect(page.getByText("Barclays", { exact: true })).toBeVisible();
+  await seek(82);
+  await expect(page.getByText("Bloomberg", { exact: true })).toBeVisible();
+  await expect(page.getByText("Nasdaq", { exact: true })).toBeVisible();
+  await seek(92);
+  await expect(page.getByText("Citadel", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jane Street", { exact: true })).toBeVisible();
+  await seek(100);
+  await expect(page.locator(".arima-destination")).toBeVisible();
+  await expect(page.locator(".arima-destination").getByText("ARIMA FINANCE")).toBeVisible();
+});
+
+test("reduced motion reveals the readable static destination", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openFilm(page);
-  await expect(page.locator(".af-film-mark")).toBeVisible();
-  await expect(page.locator(".af-film-name")).toBeVisible();
+  await expect(page.locator(".arima-destination")).toBeVisible();
+  await expect(page.locator(".arima-destination").getByText("ARIMA FINANCE")).toBeVisible();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
