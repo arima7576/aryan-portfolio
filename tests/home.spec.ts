@@ -1,63 +1,65 @@
 import { expect, test } from "@playwright/test";
 
-async function openFresh(page: import("@playwright/test").Page) {
+async function openFilm(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(500);
 }
 
-test("renders the complete company narrative without runtime errors", async ({ page }) => {
+test("renders only the Phase 1 cinematic film", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("pageerror", (error) => errors.push(error.message));
-  await openFresh(page);
-  await expect(page).toHaveTitle(/Arima Finance/);
-  await expect(page.locator(".candle-system")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "What is Arima Finance?" })).toBeAttached();
-  await expect(page.getByRole("heading", { name: "Arima Finance Engine" }).last()).toBeAttached();
-  await expect(page.getByRole("heading", { name: /Build the Future of/ })).toBeAttached();
+  await openFilm(page);
+  await expect(page.locator(".phase-one-film")).toBeVisible();
+  await expect(page.locator(".film-stage")).toBeVisible();
+  await expect(page.locator(".animation-diagnostics")).toHaveCount(0);
+  await expect(page.locator(".cinematic-nav")).toHaveCount(0);
+  await expect(page.locator(".portfolio-scene, .founder-scene, .contact-scene")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
-test("skip, persistent navigation and replay follow the intended lifecycle", async ({ page }) => {
-  await openFresh(page);
-  await page.getByRole("button", { name: /Skip Intro/ }).click();
-  await expect(page.locator(".cinematic-nav")).toHaveClass(/is-visible/);
-  await expect(page.locator("#company")).toBeInViewport({ ratio: 0.05 });
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("arima-cinematic-complete-v1"))).toBe("true");
-  await page.reload();
-  await expect(page.getByRole("button", { name: "Replay Experience" })).toBeVisible();
-  await page.getByRole("button", { name: "Replay Experience" }).click();
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("arima-cinematic-complete-v1"))).toBeNull();
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+test("one native-scroll master timeline produces six distinct desktop states", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop cinematic state validation");
+  await openFilm(page);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  expect(maxScroll).toBeGreaterThanOrEqual(6_500);
+
+  const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
+  for (const progress of [0, .2, .4, .6, .8, 1]) {
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
+    await page.waitForTimeout(1_300);
+    states.push(await page.evaluate((value) => ({
+      progress: value,
+      candle: getComputedStyle(document.querySelector(".film-candle")!).transform,
+      universe: getComputedStyle(document.querySelector(".data-universe")!).opacity,
+      af: getComputedStyle(document.querySelector(".af-film-mark")!).opacity,
+      name: getComputedStyle(document.querySelector(".af-film-name")!).opacity,
+    }), progress));
+  }
+
+  expect(states[0].candle).not.toBe(states[2].candle);
+  expect(Number(states[3].universe)).toBeGreaterThan(0);
+  expect(Number(states[4].universe)).toBe(1);
+  expect(Number(states[5].af)).toBeGreaterThan(.99);
+  expect(Number(states[5].name)).toBeGreaterThan(.99);
 });
 
-test("first-time desktop scroll visibly advances and replay recreates the candle timeline", async ({ page, isMobile }) => {
-  test.skip(isMobile, "desktop scroll-timeline validation");
-  await openFresh(page);
-  await expect.poll(() => page.evaluate(() => document.body.dataset.arimaHydrated)).toBe("true");
-  await expect.poll(() => page.locator(".pin-spacer").count()).toBeGreaterThan(0);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
-  const before = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
-  await page.mouse.wheel(0, 1200);
-  await page.waitForTimeout(900);
-  const after = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
-  expect(parseFloat(after)).toBeGreaterThan(parseFloat(before) + 80);
-  await page.getByRole("button", { name: /Skip Intro/ }).click();
-  await page.reload();
-  await page.getByRole("button", { name: "Replay Experience" }).click();
-  await page.mouse.wheel(0, 1100);
-  await page.waitForTimeout(900);
-  const replayed = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
-  expect(parseFloat(replayed)).toBeGreaterThan(80);
+test("reduced motion reveals a readable static identity", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openFilm(page);
+  await expect(page.locator(".af-film-mark")).toBeVisible();
+  await expect(page.locator(".af-film-name")).toBeVisible();
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
-test("mobile fallback remains readable without horizontal overflow", async ({ page, isMobile }) => {
+test("responsive fallback has no horizontal overflow", async ({ page, isMobile }) => {
   test.skip(!isMobile, "mobile-only validation");
-  await openFresh(page);
-  const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
-  expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client + 1);
-  await expect(page.getByRole("button", { name: /Skip Intro/ })).toBeVisible();
+  await openFilm(page);
+  const dimensions = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 });
