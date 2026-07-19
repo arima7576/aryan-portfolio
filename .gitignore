@@ -2,3 +2,9 @@
 Thumbs.db
 *.swp
 *.tmp
+.next/
+out/
+node_modules/
+*.tsbuildinfo
+test-results/
+playwright-report/
