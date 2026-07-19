@@ -24,10 +24,10 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   await openFilm(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  expect(maxScroll).toBeGreaterThanOrEqual(21_500);
+  expect(maxScroll).toBeGreaterThanOrEqual(23_500);
 
   const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
-  for (const progress of [0, 20 / 320, 40 / 320, 60 / 320, 80 / 320, 100 / 320]) {
+  for (const progress of [0, 20 / 350, 40 / 350, 60 / 350, 80 / 350, 100 / 350]) {
     await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
     await page.waitForTimeout(1_300);
     states.push(await page.evaluate((value) => ({
@@ -52,7 +52,7 @@ test("Phase 2 continues through rotation, districts and destination", async ({ p
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (phase: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 320));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 350));
     await page.waitForTimeout(1_300);
   };
 
@@ -84,7 +84,7 @@ test("Phase 3 enters headquarters and reveals three spatial divisions", async ({
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (position: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 320));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 350));
     await page.waitForTimeout(1_300);
   };
 
@@ -100,6 +100,19 @@ test("Phase 3 enters headquarters and reveals three spatial divisions", async ({
   await seek(318);
   await expect(page.getByText("AF Portfolio Lab", { exact: true })).toBeVisible();
   await expect(page.locator(".model-disclosure")).toBeVisible();
+});
+
+test("Phase 3 closes into a light beam and darkness without revealing later content", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop endpoint validation");
+  await openFilm(page);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (336 / 350));
+  await page.waitForTimeout(1_300);
+  await expect(page.locator(".founder-transition-beam")).toBeVisible();
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll);
+  await page.waitForTimeout(1_300);
+  await expect(page.locator(".phase-three-darkness")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".founder-scene, .contact-scene, .cinematic-nav")).toHaveCount(0);
 });
 
 test("reduced motion reveals the readable static headquarters", async ({ page }) => {

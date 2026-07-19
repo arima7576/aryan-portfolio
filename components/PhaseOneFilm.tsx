@@ -84,6 +84,8 @@ export function PhaseOneFilm() {
   const divisionOrbit = useRef<HTMLDivElement>(null);
   const divisionPlatforms = useRef<HTMLElement[]>([]);
   const portfolioDisclosure = useRef<HTMLDivElement>(null);
+  const transitionBeam = useRef<HTMLDivElement>(null);
+  const transitionDarkness = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (!root.current || !stage.current || !ensureAnimationPlugins()) return;
@@ -96,7 +98,7 @@ export function PhaseOneFilm() {
         return;
       }
 
-      const travel = innerWidth < 768 ? 16000 : 22000;
+      const travel = innerWidth < 768 ? 17500 : 24000;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -216,12 +218,24 @@ export function PhaseOneFilm() {
         .to([intelligenceCore.current, coreIdentity.current], { scale: .42, opacity: .32, duration: 12, ease: "power2.inOut" }, 270)
         .fromTo(divisionOrbit.current, { opacity: 0, scale: .5, rotateY: -26 }, { opacity: 1, scale: 1, rotateY: 0, duration: 14, ease: "power2.out" }, 272)
         .fromTo(divisionPlatforms.current, { opacity: 0, y: 160, rotateX: 18 }, { opacity: 1, y: 0, rotateX: 0, duration: 14, stagger: 3, ease: "power2.out" }, 274)
-        .to(divisionOrbit.current, { rotateY: -18, rotateX: 2, duration: 17, ease: "sine.inOut" }, 284)
-        .to(divisionOrbit.current, { rotateY: 18, rotateX: -2, duration: 17, ease: "sine.inOut" }, 301)
+        .to(divisionOrbit.current, { rotateY: -4, rotateX: 1, duration: 17, ease: "sine.inOut" }, 284)
+        .to(divisionOrbit.current, { rotateY: 4, rotateX: -1, duration: 17, ease: "sine.inOut" }, 301)
         .to(divisionPlatforms.current[0], { opacity: .28, scale: .88, duration: 8 }, 292)
         .to(divisionPlatforms.current[1], { opacity: .32, scale: .9, duration: 8 }, 302)
-        .to(divisionPlatforms.current[2], { scale: 1.08, duration: 10 }, 302)
-        .fromTo(portfolioDisclosure.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 10 }, 310);
+        .to(divisionPlatforms.current[2], { scale: 1.04, duration: 10 }, 302)
+        .fromTo(portfolioDisclosure.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 8 }, 308)
+        .to({}, { duration: 8 }, 316)
+
+        .to(portfolioDisclosure.current, { opacity: 0, y: 14, duration: 5 }, 324)
+        .to(divisionPlatforms.current, { x: 0, y: 0, scale: .08, rotateY: 0, opacity: 0, duration: 12, stagger: .7, ease: "power2.in" }, 324)
+        .to([hallRing.current, coreStreams.current], { opacity: 0, scale: .7, duration: 10 }, 326)
+        .to(hall.current, { rotateY: 0, rotateX: 0, duration: 7 }, 326)
+        .to([intelligenceCore.current, coreIdentity.current], { scale: .18, opacity: 0, duration: 10, ease: "power2.in" }, 328)
+        .to(headquarters.current, { backgroundColor: "#000", duration: 13 }, 327)
+        .fromTo(transitionBeam.current, { opacity: 0, scaleY: .02, scaleX: .3 }, { opacity: 1, scaleY: 1, scaleX: 1, duration: 8, ease: "power2.out" }, 330)
+        .to(transitionBeam.current, { scale: 7, opacity: .92, duration: 6, ease: "power3.in" }, 338)
+        .fromTo(transitionDarkness.current, { opacity: 0 }, { opacity: 1, duration: 8, ease: "power2.inOut" }, 340)
+        .to(transitionBeam.current, { opacity: 0, duration: 6 }, 342);
     }, root);
 
     return () => {
@@ -330,6 +344,8 @@ export function PhaseOneFilm() {
 
             <div ref={portfolioDisclosure} className="model-disclosure"><strong>Model Portfolio Disclosure</strong><span>The investor profiles presented are internal research models. The underlying capital belongs to the founder. Arima Finance does not currently manage external client assets through these profiles. Information is presented for research, demonstration and technology-development purposes only.</span></div>
           </div>
+          <div ref={transitionBeam} className="founder-transition-beam" aria-hidden="true"/>
+          <div ref={transitionDarkness} className="phase-three-darkness" aria-hidden="true"/>
         </div>
       </div>
     </section>
