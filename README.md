@@ -1,26 +1,35 @@
-# Aryan Heidari — Arima Finance Portfolio
+# Arima Finance Website
 
-Static multi-page website for Aryan Heidari and Arima Finance, covering professional
-profile, public-safe project work, research records and document availability.
+Official static website for Arima Finance, an independent quantitative finance and financial technology company.
 
-- **Production domain:** <https://arimafinance.xyz>
-- **GitHub:** <https://github.com/arima7576/aryan-portfolio>
-- **Technology:** semantic HTML, CSS and small dependency-free JavaScript
-- **Build step:** none
+- Production: <https://arimafinance.xyz>
+- Stack: semantic HTML, modern CSS and dependency-free JavaScript
+- Deployment: GitHub `main` to Cloudflare
+- Build command: none
 
-## Deployment
+## Information architecture
 
 ```text
-GitHub main
-    ↓
-Cloudflare automatic deployment
-    ↓
-https://arimafinance.xyz
+Home
+├── Company
+├── Capabilities
+│   ├── Quantitative Research
+│   ├── Algorithm Development
+│   └── Portfolio & Investment Management
+├── Work
+│   ├── Arima Finance Engine
+│   ├── Investment Memorandum
+│   └── Restricted Client Work
+├── Research
+├── Founder
+├── Resources
+├── Contact
+└── Legal
+    ├── Privacy
+    └── Terms
 ```
 
-Cloudflare Workers serves the repository as static assets. Do not configure a build
-command or commit generated output. DNS and nameserver management are outside this
-repository.
+The architecture is company-first. The founder profile supplies context but is not the centre of the platform. Work cards use an expandable taxonomy for institutional research, trading systems, AI projects, risk systems, quantitative models, client projects, dashboards and automation.
 
 ## Local preview
 
@@ -28,122 +37,42 @@ repository.
 python3 -m http.server 8000
 ```
 
-Open <http://localhost:8000>. No package installation or build step is required.
+Open <http://localhost:8000>.
 
-## Structure
+## Content rules
 
-```text
-.
-├── index.html
-├── about.html
-├── experience.html
-├── projects.html
-├── projects/
-│   ├── arima-finance-engine.html
-│   ├── investment-memorandum.html
-│   └── artane-presentation.html
-├── research.html
-├── publications.html
-├── downloads.html
-├── contact.html
-├── assets/
-│   ├── icons/
-│   ├── images/
-│   └── documents/
-├── styles.css
-├── script.js
-├── robots.txt
-├── sitemap.xml
-└── CNAME
-```
+- Do not publish credentials, client data, proprietary thresholds or operational configuration.
+- Do not publish a client identity, transaction term, financial figure or source document without explicit approval.
+- Do not make performance, track-record or investment-return claims without independently validated evidence and context.
+- Keep working-paper and publication status accurate; external records are the source of truth.
+- Use **Available soon** rather than linking to a missing or unapproved document.
+- Keep Arima Finance company-first and treat founder content as a supporting layer.
 
-## Configurable public links
+## Adding work
 
-Keep these values consistent across every page:
+1. Create a case-study page under `projects/`.
+2. Classify it using one or more approved work categories.
+3. State the publication boundary and status.
+4. Add the project to `projects.html`; feature it on the homepage only when warranted.
+5. Add the page to `sitemap.xml` and validate every local link.
 
-| Purpose | Public value |
-|---|---|
-| Domain | `https://arimafinance.xyz` |
-| Professional email | `aryan.hd@outlook.com` |
-| GitHub profile | `https://github.com/arima7576` |
-| Engine repository | `https://github.com/arima7576/Arima-Finance-Engine` |
-| Engine release | `https://github.com/arima7576/Arima-Finance-Engine/releases/tag/v0.1.0` |
-| LinkedIn | Available soon — verified public profile required |
-| Primary SSRN record | `https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5127689` |
-| CV | Available soon |
-| Handbook | Available soon |
+## Public assets still needed
 
-Never publish an admin/dashboard URL or a link requiring private account access.
-
-## Updating content
-
-### Add a project
-
-1. Add a page under `projects/` using an existing project page as the structural guide.
-2. Add a card to `projects.html`.
-3. Add it to the homepage only if it belongs in the four-item Featured Work section.
-4. Add a clear publication and confidentiality label.
-
-### Add research
-
-1. Verify the title, author, platform, public URL and publication status.
-2. Add the record to `research.html` and `publications.html`.
-3. Link a PDF only when the PDF is actually tracked and approved for publication.
-4. Do not describe an SSRN working paper or preprint as peer reviewed unless verified.
-
-### Add a PDF
-
-1. Place the reviewed file in the correct `assets/documents/` category.
-2. Replace **Available soon** in `downloads.html` only after the path exists.
-3. Provide both View and Download actions where the document is locally available.
-4. Re-run the confidentiality and link checks below.
-
-## Confidentiality checklist
-
-- [ ] No phone number, private address, immigration or legal information
-- [ ] No credentials, account numbers, tokens or private account URLs
-- [ ] No private company or client identity without written approval
-- [ ] No transaction terms, data-room content or unpublished financial figures
-- [ ] No proprietary strategy rules, thresholds, formulas or configuration
-- [ ] No confidential employer comments or source documents
-- [ ] Every restricted item is visibly labelled
-- [ ] All PDFs have been reviewed independently from their filenames
-
-## Deployment checklist
-
-- [ ] `CNAME` contains exactly `arimafinance.xyz`
-- [ ] Every canonical and Open Graph URL uses `https://arimafinance.xyz`
-- [ ] Local HTML, asset and PDF links resolve
-- [ ] Navigation works at desktop and mobile widths
-- [ ] Keyboard focus and Escape-to-close navigation work
-- [ ] `python3 -m http.server 8000` serves every page
-- [ ] `main` is clean and up to date before push
-
-## Publication checklist
-
-- [ ] Claims are supported by public or owner-verified information
-- [ ] Research status does not imply unverified peer review
-- [ ] Missing content is labelled **Available soon** without a broken link
-- [ ] Confidential engagements expose only contribution and methodology
-- [ ] Secret and sensitive-content scans return no findings
-- [ ] Cloudflare deployment completes after the GitHub push
-
-## Unresolved placeholders
-
-- Verified public LinkedIn profile URL
-- Current public CV PDF
-- Arima Finance Engine public handbook PDF
-- Approved Artane presentation preview, if permission is granted
-- Any approved public-safe Investment Memorandum extract
-- Additional research record referenced in prior notes, if verified
-
-## Documents still needed from Aryan
-
-- Current public CV
+- Publication-approved founder portrait
+- Reviewed public CV
 - Public Arima Finance Engine handbook
-- Approved research PDFs, where direct downloads are desired
-- Approved presentation previews
-- Any synthetic or publication-approved case study
+- Approved research PDFs
+- Approved presentation or case-study extracts
+- Verified public LinkedIn profile URL
 
-Confidential source documents should never be copied into this repository merely to
-prepare a public summary.
+## Pre-publication checks
+
+- Confirm `CNAME` contains exactly `arimafinance.xyz`.
+- Validate canonical and Open Graph URLs.
+- Test every page, asset and fragment from a local HTTP server.
+- Test navigation at desktop and mobile widths, including keyboard Escape handling.
+- Run a secret, personal-path and large-file scan.
+- Verify external links and publication claims.
+- Ensure privacy, terms and financial disclaimer remain visible.
+
+Confidential source documents must never be copied into this repository simply to prepare a public summary.

@@ -1,58 +1,47 @@
-/**
- * Aryan Heidari — Portfolio
- * Minimal vanilla JS. No tracking, no analytics, no third-party requests.
- */
 (function () {
   "use strict";
-
-  // Mobile navigation toggle
+  document.documentElement.classList.add("js");
+  var header = document.querySelector(".site-header");
   var toggle = document.querySelector(".nav-toggle");
   var links = document.querySelector(".nav-links");
 
+  function closeMenu() {
+    if (!toggle || !links) return;
+    links.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
   if (toggle && links) {
-    function closeMenu() {
-      links.classList.remove("open");
-      toggle.setAttribute("aria-expanded", "false");
-    }
-
     toggle.addEventListener("click", function () {
-      var isOpen = links.classList.toggle("open");
-      toggle.setAttribute("aria-expanded", String(isOpen));
+      var open = links.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(open));
     });
-
-    // Close menu when a link is chosen (mobile)
-    links.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () {
-        closeMenu();
-      });
-    });
-
+    links.querySelectorAll("a").forEach(function (link) { link.addEventListener("click", closeMenu); });
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && links.classList.contains("open")) {
-        closeMenu();
-        toggle.focus();
-      }
+      if (event.key === "Escape" && links.classList.contains("open")) { closeMenu(); toggle.focus(); }
     });
-
     document.addEventListener("click", function (event) {
-      if (!links.contains(event.target) && !toggle.contains(event.target)) {
-        closeMenu();
-      }
+      if (!links.contains(event.target) && !toggle.contains(event.target)) closeMenu();
     });
   }
 
-  // Mark the current page in the nav for styling + a11y
-  var here = (document.body.getAttribute("data-page") || "").toLowerCase();
-  if (here) {
-    document.querySelectorAll(".nav-links a[data-nav]").forEach(function (a) {
-      if (a.getAttribute("data-nav") === here) {
-        a.setAttribute("aria-current", "page");
-      }
-    });
-  }
+  function updateHeader() { if (header) header.classList.toggle("scrolled", window.scrollY > 12); }
+  updateHeader();
+  window.addEventListener("scroll", updateHeader, { passive: true });
 
-  // Current year in footer
-  document.querySelectorAll("[data-year]").forEach(function (el) {
-    el.textContent = String(new Date().getFullYear());
+  var page = document.body.getAttribute("data-page");
+  document.querySelectorAll("[data-nav]").forEach(function (link) {
+    if (link.getAttribute("data-nav") === page) link.setAttribute("aria-current", "page");
   });
-})();
+  document.querySelectorAll("[data-year]").forEach(function (node) { node.textContent = String(new Date().getFullYear()); });
+
+  var items = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) { if (entry.isIntersecting) { entry.target.classList.add("visible"); observer.unobserve(entry.target); } });
+    }, { threshold: 0.12 });
+    items.forEach(function (item) { observer.observe(item); });
+  } else {
+    items.forEach(function (item) { item.classList.add("visible"); });
+  }
+}());
