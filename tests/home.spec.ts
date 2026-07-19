@@ -29,6 +29,24 @@ test("skip, persistent navigation and replay follow the intended lifecycle", asy
   await expect(page.getByRole("button", { name: "Replay Experience" })).toBeVisible();
   await page.getByRole("button", { name: "Replay Experience" }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("arima-cinematic-complete-v1"))).toBeNull();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+});
+
+test("first-time desktop scroll visibly advances and replay recreates the candle timeline", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop scroll-timeline validation");
+  await openFresh(page);
+  const before = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
+  await page.mouse.wheel(0, 1200);
+  await page.waitForTimeout(900);
+  const after = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
+  expect(parseFloat(after)).toBeGreaterThan(parseFloat(before) + 80);
+  await page.getByRole("button", { name: /Skip Intro/ }).click();
+  await page.reload();
+  await page.getByRole("button", { name: "Replay Experience" }).click();
+  await page.mouse.wheel(0, 1100);
+  await page.waitForTimeout(900);
+  const replayed = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
+  expect(parseFloat(replayed)).toBeGreaterThan(80);
 });
 
 test("mobile fallback remains readable without horizontal overflow", async ({ page, isMobile }) => {

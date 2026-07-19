@@ -2,15 +2,14 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { ensureAnimationPlugins, gsap } from "@/lib/animation-runtime";
 
 const institutions = ["JPMorgan", "Goldman Sachs", "Morgan Stanley", "BlackRock", "Bloomberg", "Citadel", "Jane Street", "Barclays", "HSBC", "UBS", "Deutsche Bank", "Nomura", "Bank of England", "Nasdaq", "CME Group"];
 
 export function InstitutionScene({ compact }: { compact: boolean }) {
   const root = useRef<HTMLElement>(null); const track = useRef<HTMLDivElement>(null);
   useGSAP(() => {
+    if (!ensureAnimationPlugins()) return;
     if (compact || matchMedia("(prefers-reduced-motion: reduce)").matches || innerWidth < 768) return;
     gsap.to(track.current, { xPercent: -50, ease: "none", scrollTrigger: { trigger: root.current, start: "top top", end: "+=220%", scrub: 1, pin: true } });
   }, { scope: root, dependencies: [compact], revertOnUpdate: true });

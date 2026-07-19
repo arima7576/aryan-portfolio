@@ -2,13 +2,12 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { ensureAnimationPlugins, gsap } from "@/lib/animation-runtime";
 
 export function IntroScene({ compact }: { compact: boolean }) {
   const root = useRef<HTMLElement>(null);
   useGSAP(() => {
+    if (!ensureAnimationPlugins()) return;
     if (compact || matchMedia("(prefers-reduced-motion: reduce)").matches || innerWidth < 768) return;
     const timeline = gsap.timeline({ scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 1.1, pin: true } });
     timeline.fromTo(".candle-body", { height: 2, width: 54, borderRadius: 20 }, { height: 250, width: 92, borderRadius: 4, duration: 2 })

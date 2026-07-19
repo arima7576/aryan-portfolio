@@ -2,9 +2,7 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { ensureAnimationPlugins, gsap } from "@/lib/animation-runtime";
 
 const streams = [
   ["XAUUSD", "2384.62", "BID 2384.58", "ASK 2384.66", "VOL 0.184"],
@@ -16,6 +14,7 @@ const streams = [
 export function DataUniverseScene({ compact }: { compact: boolean }) {
   const root = useRef<HTMLElement>(null);
   useGSAP(() => {
+    if (!ensureAnimationPlugins()) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     gsap.utils.toArray<HTMLElement>(".data-stream").forEach((stream, index) => {
       gsap.fromTo(stream, { yPercent: index % 2 ? 30 : -20, opacity: .15 }, { yPercent: index % 2 ? -25 : 25, opacity: .75, ease: "none", scrollTrigger: { trigger: root.current, start: "top bottom", end: "bottom top", scrub: true } });

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ScrollController } from "./ScrollController";
+import { AnimationDiagnostics } from "./AnimationDiagnostics";
 import { CinematicNavigation } from "./CinematicNavigation";
 import { IntroScene } from "./scenes/IntroScene";
 import { DataUniverseScene } from "./scenes/DataUniverseScene";
@@ -13,11 +14,13 @@ import { FounderScene } from "./scenes/FounderScene";
 import { PortfolioScene } from "./scenes/PortfolioScene";
 import { EngineScene } from "./scenes/EngineScene";
 import { ContactScene } from "./scenes/ContactScene";
+import { ensureAnimationPlugins, ScrollTrigger } from "@/lib/animation-runtime";
 
 const STORAGE_KEY = "arima-cinematic-complete-v1";
 
 export function CinematicExperience() {
   const [introComplete, setIntroComplete] = useState<boolean | null>(null);
+  const [runtimeVersion, setRuntimeVersion] = useState(0);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setIntroComplete(localStorage.getItem(STORAGE_KEY) === "true"));
     return () => cancelAnimationFrame(frame);
@@ -26,24 +29,42 @@ export function CinematicExperience() {
     const contact = document.getElementById("contact");
     if (!contact) return;
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { localStorage.setItem(STORAGE_KEY, "true"); setIntroComplete(true); }
+      if (entry.isIntersecting && introComplete !== true) {
+        localStorage.setItem(STORAGE_KEY, "true");
+        setIntroComplete(true);
+        setRuntimeVersion((version) => version + 1);
+      }
     }, { threshold: 0.15 });
     observer.observe(contact); return () => observer.disconnect();
   }, [introComplete]);
   const skip = () => {
     localStorage.setItem(STORAGE_KEY, "true");
     setIntroComplete(true);
+    setRuntimeVersion((version) => version + 1);
     requestAnimationFrame(() => requestAnimationFrame(() => {
       window.dispatchEvent(new Event("resize"));
       document.getElementById("company")?.scrollIntoView({ behavior: "auto", block: "start" });
     }));
   };
-  const replay = () => { localStorage.removeItem(STORAGE_KEY); setIntroComplete(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const replay = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setIntroComplete(false);
+    setRuntimeVersion((version) => version + 1);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+      if (ensureAnimationPlugins()) {
+        ScrollTrigger.clearScrollMemory("manual");
+        ScrollTrigger.refresh(true);
+        ScrollTrigger.update();
+      }
+    }));
+  };
 
   const completed = introComplete === true;
   return <main className="cinematic-root">
     {introComplete === null && <div className="loading-screen"><span className="loading-line"/><p>INITIALISING ARIMA FINANCE</p></div>}
-    <ScrollController />
+    <ScrollController runtimeVersion={runtimeVersion} introCompleted={completed} />
+    <AnimationDiagnostics />
     <CinematicNavigation introComplete={completed} onSkip={skip} onReplay={replay} />
     <div className="progress-rail" aria-hidden="true"><span /></div>
     <IntroScene compact={completed} />
