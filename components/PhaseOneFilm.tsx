@@ -49,6 +49,10 @@ const founderStages = [
   ["QUANTITATIVE INTELLIGENCE", "Quantitative Research", "Financial Modelling", "Algorithm Development", "Portfolio Analytics"],
 ];
 const founderCapabilities = ["Financial Modelling", "Valuation", "Market Research", "Quantitative Analysis", "ARIMA / SARIMA / SARIMAX", "Monte Carlo Simulation", "Portfolio Optimisation", "Volatility Analysis", "Risk Management", "Algorithmic Trading", "Python", "TradingView / Pine Script", "Financial Presentation"];
+const engineWorkflow = ["Market Data", "Macro Context", "Liquidity Analysis", "Entry Confirmation", "Risk Plan", "Trade Management", "Alert Delivery"];
+const engineControls = ["Risk per setup", "Position sizing", "Exposure limits", "Drawdown limits", "Round-level controls", "Daily-loss controls", "Stop management", "Reward-to-risk validation", "Trade lifecycle management"];
+const portfolioProfiles = ["Growth 01", "Balanced 02", "Income 03", "Opportunity 04", "Defensive 05"];
+const quantSystems = [["AEXT LTD Robot", "Live Research"], ["Precision Confluence Strategy", "Historical Study"], ["Multi-timeframe market framework", "Prototype"], ["EMA / MACD / RSI systems", "Research Prototype"], ["TradingView / Pine Script tools", "In Development"]];
 
 export function PhaseOneFilm() {
   const root = useRef<HTMLElement>(null);
@@ -106,6 +110,24 @@ export function PhaseOneFilm() {
   const founderFinal = useRef<HTMLDivElement>(null);
   const projectCorridor = useRef<HTMLDivElement>(null);
   const founderFade = useRef<HTMLDivElement>(null);
+  const projectsFilm = useRef<HTMLDivElement>(null);
+  const projectsEntry = useRef<HTMLDivElement>(null);
+  const engineWorld = useRef<HTMLDivElement>(null);
+  const engineTitle = useRef<HTMLDivElement>(null);
+  const marketMonitors = useRef<HTMLDivElement>(null);
+  const engineWorkflowNode = useRef<HTMLDivElement>(null);
+  const riskWorld = useRef<HTMLDivElement>(null);
+  const tradeArchitecture = useRef<HTMLDivElement>(null);
+  const validationWorld = useRef<HTMLDivElement>(null);
+  const portfolioWorld = useRef<HTMLDivElement>(null);
+  const profileField = useRef<HTMLDivElement>(null);
+  const labDisclosure = useRef<HTMLDivElement>(null);
+  const quantWorld = useRef<HTMLDivElement>(null);
+  const researchWorld = useRef<HTMLDivElement>(null);
+  const technologyWorld = useRef<HTMLDivElement>(null);
+  const projectConstellation = useRef<HTMLDivElement>(null);
+  const projectEndCorridor = useRef<HTMLDivElement>(null);
+  const projectEndFade = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (!root.current || !stage.current || !ensureAnimationPlugins()) return;
@@ -118,7 +140,7 @@ export function PhaseOneFilm() {
         return;
       }
 
-      const travel = innerWidth < 768 ? 25000 : 34000;
+      const travel = innerWidth < 768 ? 34000 : 46200;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -292,7 +314,54 @@ export function PhaseOneFilm() {
         .fromTo(projectCorridor.current, { opacity: 0, scale: .55 }, { opacity: 1, scale: 1, duration: 10 }, 488)
         .to(founderFigure.current, { rotateY: 24, x: -120, opacity: .42, duration: 11, ease: "sine.inOut" }, 488)
         .to(founderFinal.current, { opacity: .58, y: -18, duration: 7 }, 496)
-        .fromTo(founderFade.current, { opacity: 0 }, { opacity: .72, duration: 6 }, 494);
+        .fromTo(founderFade.current, { opacity: 0 }, { opacity: .72, duration: 6 }, 494)
+
+        .fromTo(projectsFilm.current, { opacity: 0 }, { opacity: 1, duration: 7 }, 500)
+        .fromTo(projectsEntry.current, { opacity: 0, scale: .55 }, { opacity: 1, scale: 1, duration: 11 }, 500)
+        .to(founderScene.current, { opacity: 0, duration: 10 }, 500)
+        .to(projectsEntry.current, { scale: 2.8, opacity: 0, duration: 10, ease: "power2.in" }, 508)
+
+        .fromTo(engineWorld.current, { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 10 }, 508)
+        .fromTo(engineTitle.current, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 10 }, 510)
+        .to(engineTitle.current, { opacity: .2, scale: .8, duration: 8 }, 520)
+        .fromTo(marketMonitors.current, { opacity: 0, z: -500 }, { opacity: 1, z: 0, duration: 12 }, 518)
+        .to(marketMonitors.current, { rotateY: -7, duration: 10, ease: "sine.inOut" }, 524)
+        .to(marketMonitors.current, { opacity: .15, z: 180, duration: 8 }, 532)
+        .fromTo(engineWorkflowNode.current, { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 11 }, 530)
+        .to(engineWorkflowNode.current, { x: -80, opacity: .18, duration: 9 }, 541)
+
+        .fromTo(riskWorld.current, { opacity: 0, scale: .4 }, { opacity: 1, scale: 1, duration: 12 }, 540)
+        .to(engineTitle.current, { opacity: 0, duration: 7 }, 542)
+        .to(riskWorld.current, { rotateY: 8, duration: 12, ease: "sine.inOut" }, 548)
+        .fromTo(tradeArchitecture.current, { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 10 }, 552)
+        .to(riskWorld.current, { opacity: .28, scale: .72, duration: 9 }, 558)
+        .to(tradeArchitecture.current, { opacity: .2, y: -60, duration: 8 }, 563)
+        .fromTo(validationWorld.current, { opacity: 0, scale: .75 }, { opacity: 1, scale: 1, duration: 10 }, 562)
+        .to(validationWorld.current, { opacity: 0, scale: 1.2, duration: 8 }, 574)
+
+        .to(riskWorld.current, { opacity: 1, scale: .34, rotateY: 0, duration: 8 }, 574)
+        .fromTo(portfolioWorld.current, { opacity: 0 }, { opacity: 1, duration: 10 }, 576)
+        .to(engineWorld.current, { opacity: 0, duration: 8 }, 576)
+        .fromTo(profileField.current, { opacity: 0, rotateY: -12, scale: .7 }, { opacity: 1, rotateY: 0, scale: 1, duration: 12 }, 582)
+        .to(profileField.current, { rotateY: 7, duration: 12, ease: "sine.inOut" }, 590)
+        .fromTo(labDisclosure.current, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 8 }, 596)
+        .to([profileField.current, labDisclosure.current], { opacity: 0, scale: .8, duration: 9 }, 606)
+
+        .fromTo(quantWorld.current, { opacity: 0, z: -400 }, { opacity: 1, z: 0, duration: 11 }, 606)
+        .to(portfolioWorld.current, { opacity: 0, duration: 7 }, 608)
+        .to(quantWorld.current, { rotateY: -7, duration: 12, ease: "sine.inOut" }, 614)
+        .to(quantWorld.current, { opacity: 0, z: 220, duration: 8 }, 624)
+        .fromTo(researchWorld.current, { opacity: 0, x: 160 }, { opacity: 1, x: 0, duration: 11 }, 622)
+        .to(researchWorld.current, { x: -100, opacity: 0, duration: 9 }, 636)
+        .fromTo(technologyWorld.current, { opacity: 0, scale: .72 }, { opacity: 1, scale: 1, duration: 11 }, 634)
+        .to(technologyWorld.current, { opacity: 0, scale: 1.3, duration: 9 }, 648)
+
+        .fromTo(projectConstellation.current, { opacity: 0, scale: .45, rotateY: -16 }, { opacity: 1, scale: 1, rotateY: 0, duration: 14 }, 646)
+        .to(projectConstellation.current, { rotateY: 9, duration: 13, ease: "sine.inOut" }, 655)
+        .to(projectConstellation.current, { scale: .55, opacity: .35, duration: 10 }, 664)
+        .fromTo(projectEndCorridor.current, { opacity: 0, scale: .5 }, { opacity: 1, scale: 1, duration: 10 }, 662)
+        .to(projectEndCorridor.current, { scale: 2.4, duration: 10, ease: "power2.in" }, 670)
+        .fromTo(projectEndFade.current, { opacity: 0 }, { opacity: .86, duration: 8 }, 672);
     }, root);
 
     return () => {
@@ -444,6 +513,31 @@ export function PhaseOneFilm() {
           <div ref={founderFinal} className="founder-final"><small>ARYAN HEIDARI</small><strong>Founder of Arima Finance</strong><p>Building financial systems where research, technology and risk discipline converge.</p></div>
           <div ref={projectCorridor} className="project-corridor" aria-hidden="true"><i/><i/><i/><span/><span/><span/></div>
           <div ref={founderFade} className="founder-end-fade" aria-hidden="true"/>
+        </div>
+
+        <div ref={projectsFilm} className="projects-film" aria-label="Arima Finance project environments">
+          <div ref={projectsEntry} className="projects-entry"><span>PROJECT SYSTEMS</span><i/><i/><i/></div>
+
+          <div ref={engineWorld} className="engine-world">
+            <div ref={engineTitle} className="project-world-title"><small>ARIMA FINANCE · FLAGSHIP SYSTEM</small><h2>Arima Finance Engine</h2><p>A market-intelligence, risk and trade-management system.</p><span>Automated market analysis and virtual trade management, with execution integration in development.</span></div>
+            <div ref={marketMonitors} className="market-monitors">{[["XAUUSD", "GOLD"], ["SPX", "S&P 500"], ["BTCUSD", "BITCOIN"]].map(([symbol, market], index) => <article key={symbol}><small>{market}</small><strong>{symbol}</strong><svg viewBox="0 0 260 80"><path d={index === 0 ? "M0 62 C34 44 52 65 83 35 S135 51 168 24 S220 37 260 9" : index === 1 ? "M0 55 C42 60 58 38 92 47 S140 20 176 31 S223 13 260 19" : "M0 66 C25 32 59 63 91 28 S151 55 184 18 S226 42 260 5"}/></svg><i>MONITORING</i></article>)}</div>
+            <div ref={engineWorkflowNode} className="engine-workflow"><small>DECISION ARCHITECTURE</small>{engineWorkflow.map((node, index) => <span key={node}><b>0{index + 1}</b>{node}<i/></span>)}</div>
+            <div ref={riskWorld} className="risk-world"><div className="risk-core-project"><small>RISK MANAGEMENT CORE</small><strong>RISK</strong><p>Risk is not added after the signal.<br/>It is part of the decision architecture.</p></div><div className="risk-controls">{engineControls.map((control) => <span key={control}>{control}</span>)}</div></div>
+            <div ref={tradeArchitecture} className="trade-architecture"><small>TRADE MANAGEMENT ARCHITECTURE</small><span>Break-even management</span><i/><span>Partial take-profit ladder</span><i/><span>Trailing-stop logic</span><i/><span>Market-structure override</span><i/><span>Economic-news filters</span><i/><span>Telegram alerts</span></div>
+            <div ref={validationWorld} className="validation-world"><small>ENGINE VALIDATION</small><h3>Tested as a decision system.</h3><div><span>Automated regression testing</span><span>Historical candle replay</span><span>Scenario testing</span><span>Invalid-setup rejection</span><span>Live runtime monitoring</span></div><p>No performance or return claim is presented.</p></div>
+          </div>
+
+          <div ref={portfolioWorld} className="portfolio-world"><header><small>ARIMA FINANCE · FOUNDER PROJECT</small><h2>AF Portfolio Lab</h2><p>Founder-funded model portfolios for allocation, risk and performance research.</p></header><div ref={profileField} className="profile-field">{portfolioProfiles.map((profile, index) => <article key={profile}><small>INTERNAL MODEL 0{index + 1}</small><strong>{profile}</strong><div><span>ALLOCATION</span><span>RISK UTILISATION</span><span>DRAWDOWN</span></div><svg viewBox="0 0 220 60"><path d={`M0 ${48-index*2} C35 ${35+index} 48 48 76 28 S124 42 153 19 S193 31 220 ${8+index}`}/></svg><i>Interface demonstration — not reported portfolio performance.</i></article>)}</div><div ref={labDisclosure} className="lab-disclosure"><strong>PORTFOLIO LAB DISCLOSURE</strong><span>The profiles shown are internal model portfolios funded using the founder&apos;s own capital. They do not represent external clients or externally managed assets. Information is presented for research, demonstration and system-development purposes.</span></div></div>
+
+          <div ref={quantWorld} className="quant-project-world"><header><small>RESEARCH PROTOTYPE</small><h2>Quantitative Trading Systems</h2></header><div>{quantSystems.map(([system, status]) => <article key={system}><strong>{system}</strong><span>{status}</span></article>)}</div><p>Multi-timeframe analysis · supply and demand · liquidity sweeps · market-structure shifts · risk-to-reward filtering</p></div>
+
+          <div ref={researchWorld} className="research-project-world"><div className="document-plane"><small>FOUNDER-LED · COLLABORATIVE · CONFIDENTIAL</small><h2>Financial Research<br/>&amp; Advisory</h2><div><span>Financial modelling</span><span>Company analysis</span><span>Valuation</span><span>Investment memoranda</span><span>Market research</span><span>Scenario analysis</span><span>Risk review</span><span>Strategic presentations</span></div></div><aside><strong>Selected work</strong><span>Pin4 Investment Memorandum contribution</span><span>Fast-fashion investment research</span><span>Web3 investment-risk work</span><span>Islamic-finance and mining-sector research</span><span>Client-specific portfolio research</span></aside><p>Selected work includes founder-led, collaborative and confidential assignments. Certain project details are intentionally withheld.</p></div>
+
+          <div ref={technologyWorld} className="technology-project-world"><header><small>FOUNDER PROJECT · RESEARCH PROTOTYPE</small><h2>Financial Technology<br/>&amp; Experimental Systems</h2></header><div className="technology-signals"><span>AEXT technology concepts</span><span>Financial dashboards</span><span>Automated alert systems</span><span>AI-assisted financial tools</span><span>Market-data interfaces</span><span>Haptic-feedback research</span><span>Immersive technology prototypes</span></div><strong>SYSTEMS THINKING · APPLIED INNOVATION</strong></div>
+
+          <div ref={projectConstellation} className="project-constellation"><div className="constellation-core">ARIMA<br/>FINANCE ENGINE</div><span>AF PORTFOLIO LAB</span><span>QUANTITATIVE SYSTEMS</span><span>FINANCIAL RESEARCH</span><span>TECHNOLOGY PROTOTYPES</span><i/><i/><i/><i/><p>Research becomes systems.<br/>Systems become products.</p></div>
+          <div ref={projectEndCorridor} className="project-end-corridor" aria-hidden="true"><i/><i/><i/><span/><span/><span/></div>
+          <div ref={projectEndFade} className="project-end-fade" aria-hidden="true"/>
         </div>
       </div>
     </section>
