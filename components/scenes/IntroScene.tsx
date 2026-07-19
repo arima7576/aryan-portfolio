@@ -7,8 +7,14 @@ import { ensureAnimationPlugins, gsap } from "@/lib/animation-runtime";
 export function IntroScene({ compact }: { compact: boolean }) {
   const root = useRef<HTMLElement>(null);
   useGSAP(() => {
+    console.log("[Arima Animation] IntroScene timeline effect", { compact, refsReady: Boolean(root.current) });
     if (!ensureAnimationPlugins()) return;
-    if (compact || matchMedia("(prefers-reduced-motion: reduce)").matches || innerWidth < 768) return;
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isMobile = innerWidth < 768;
+    if (compact || reducedMotion || isMobile || !root.current) {
+      console.log("[Arima Animation] IntroScene early return", { compact, reducedMotion, isMobile, refsReady: Boolean(root.current) });
+      return;
+    }
     const timeline = gsap.timeline({ scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 1.1, pin: true } });
     timeline.fromTo(".candle-body", { height: 2, width: 54, borderRadius: 20 }, { height: 250, width: 92, borderRadius: 4, duration: 2 })
       .fromTo(".candle-wick", { scaleY: 0 }, { scaleY: 1, duration: 1 }, 1)
@@ -17,6 +23,7 @@ export function IntroScene({ compact }: { compact: boolean }) {
       .to(".intro-label", { opacity: 1, y: 0, duration: 1 }, 0.2)
       .to(".intro-label", { opacity: 0, duration: .6 }, 2.4)
       .to(root.current, { backgroundColor: "#020711", duration: 1 }, 3);
+    console.log("[Arima Animation] IntroScene timeline created", { triggers: timeline.scrollTrigger ? 1 : 0 });
   }, { scope: root, dependencies: [compact], revertOnUpdate: true });
   return <section ref={root} id="intro" className={`scene intro-scene ${compact ? "compact-scene" : ""}`} aria-label="Market candle introduction">
     <div className="intro-label"><span>ARIMA FINANCE</span><small>SCROLL TO ENTER THE MARKET</small></div>

@@ -11,10 +11,28 @@ function activeScene() {
 }
 
 export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVersion: number; introCompleted: boolean }) {
+  console.log("[Arima Animation] ScrollController render", { runtimeVersion, introCompleted });
   useEffect(() => {
-    if (!ensureAnimationPlugins()) return;
+    console.log("[Arima Animation] ScrollController effect", { runtimeVersion, introCompleted });
+    const conditions = {
+      windowAvailable: typeof window !== "undefined",
+      reducedMotion: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      isMobile: typeof window !== "undefined" && window.innerWidth < 768,
+      lightweightMode: false,
+      introCompleted,
+      refsReady: Boolean(document.querySelector("#intro") && document.querySelector(".progress-rail span")),
+      gsapAvailable: Boolean(gsap),
+      ScrollTriggerAvailable: Boolean(ScrollTrigger),
+    };
+    console.log("[Arima Animation] runtime conditions", conditions);
+    if (!ensureAnimationPlugins()) {
+      console.log("[Arima Animation] ScrollController early return", { reason: "plugins-unavailable", ...conditions });
+      return;
+    }
+    console.log("ScrollTrigger before", ScrollTrigger.getAll().length);
     let disposed = false;
     let lenis: Lenis | null = null;
+    let probeTrigger: ReturnType<typeof ScrollTrigger.create> | null = null;
     let lenisRunning = false;
     let lastDiagnostic = 0;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -26,6 +44,7 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
       end: () => ScrollTrigger.maxScroll(window),
       onUpdate: (self) => { if (progress) progress.style.transform = `scaleY(${self.progress})`; },
     });
+    console.log("[Arima Animation] global progress trigger created", { count: ScrollTrigger.getAll().length });
 
     const publishDiagnostics = () => {
       const now = performance.now();
@@ -59,12 +78,30 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
     }
     gsap.ticker.add(ticker);
     gsap.ticker.lagSmoothing(0);
-    const timers = [window.setTimeout(refresh, 0), window.setTimeout(refresh, 250), window.setTimeout(refresh, 1000)];
+    const probeTimer = window.setTimeout(() => {
+      const existingPins = ScrollTrigger.getAll().filter((trigger) => Boolean(trigger.pin));
+      if (existingPins.length === 0 && !reduced && !mobile && !introCompleted) {
+        console.log("[Arima Animation] no scene pin found; creating production probe");
+        probeTrigger = ScrollTrigger.create({
+          id: "intro-runtime-probe",
+          trigger: "#intro",
+          start: "top top",
+          end: "+=1000",
+          pin: true,
+          scrub: true,
+          onUpdate: (self) => document.documentElement.style.setProperty("--debug-scroll-progress", String(self.progress)),
+        });
+      }
+      console.log("ScrollTrigger after", ScrollTrigger.getAll().length);
+      refresh();
+    }, 100);
+    const timers = [window.setTimeout(refresh, 0), window.setTimeout(refresh, 250), window.setTimeout(refresh, 1000), probeTimer];
     document.fonts?.ready.then(refresh).catch(() => refresh());
     window.addEventListener("load", refresh, { once: true });
     window.addEventListener("resize", refresh);
 
     return () => {
+      console.log("[Arima Animation] ScrollController cleanup", { runtimeVersion, introCompleted });
       disposed = true;
       timers.forEach(window.clearTimeout);
       window.removeEventListener("load", refresh);
@@ -73,6 +110,7 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
       gsap.ticker.lagSmoothing(500, 33);
       lenis?.stop();
       lenis?.destroy();
+      probeTrigger?.kill();
       progressTrigger.kill();
     };
   }, [runtimeVersion, introCompleted]);

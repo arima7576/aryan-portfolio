@@ -19,9 +19,12 @@ import { ensureAnimationPlugins, ScrollTrigger } from "@/lib/animation-runtime";
 const STORAGE_KEY = "arima-cinematic-complete-v1";
 
 export function CinematicExperience() {
+  console.log("[Arima Animation] CinematicExperience render");
   const [introComplete, setIntroComplete] = useState<boolean | null>(null);
   const [runtimeVersion, setRuntimeVersion] = useState(0);
   useEffect(() => {
+    document.body.dataset.arimaHydrated = "true";
+    console.log("[Arima Animation] hydration effect", { hydrated: document.body.dataset.arimaHydrated });
     const frame = requestAnimationFrame(() => setIntroComplete(localStorage.getItem(STORAGE_KEY) === "true"));
     return () => cancelAnimationFrame(frame);
   }, []);

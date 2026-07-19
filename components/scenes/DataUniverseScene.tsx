@@ -14,12 +14,14 @@ const streams = [
 export function DataUniverseScene({ compact }: { compact: boolean }) {
   const root = useRef<HTMLElement>(null);
   useGSAP(() => {
+    console.log("[Arima Animation] DataUniverseScene timeline effect", { compact, refsReady: Boolean(root.current) });
     if (!ensureAnimationPlugins()) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     gsap.utils.toArray<HTMLElement>(".data-stream").forEach((stream, index) => {
       gsap.fromTo(stream, { yPercent: index % 2 ? 30 : -20, opacity: .15 }, { yPercent: index % 2 ? -25 : 25, opacity: .75, ease: "none", scrollTrigger: { trigger: root.current, start: "top bottom", end: "bottom top", scrub: true } });
     });
     gsap.fromTo(".data-horizon", { scaleX: .1 }, { scaleX: 1, scrollTrigger: { trigger: root.current, start: "top 70%", end: "center center", scrub: true } });
+    console.log("[Arima Animation] DataUniverseScene timelines created");
   }, { scope: root, dependencies: [compact], revertOnUpdate: true });
   return <section ref={root} className={`scene data-scene ${compact ? "compact-scene" : ""}`} aria-label="Institutional market data universe">
     <div className="data-grid" aria-hidden="true"/><div className="data-horizon" aria-hidden="true"/>

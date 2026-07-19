@@ -13,6 +13,7 @@ const capabilities = [
 export function CompanyScene() {
   const root = useRef<HTMLElement>(null);
   useGSAP(() => {
+    console.log("[Arima Animation] CompanyScene timeline effect", { refsReady: Boolean(root.current) });
     if (!ensureAnimationPlugins() || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const cards = gsap.utils.toArray<HTMLElement>(".capability-node");
     cards.forEach((card, index) => ScrollTrigger.create({
@@ -22,6 +23,7 @@ export function CompanyScene() {
       onToggle: (self) => card.classList.toggle("illuminated", self.isActive),
       onEnter: () => gsap.to(".intelligence-pulse", { left: `${18 + index * 32}%`, duration: .7, ease: "power2.inOut" }),
     }));
+    console.log("[Arima Animation] CompanyScene triggers created", { count: cards.length });
   }, { scope: root });
   return <section ref={root} id="company" className="company-scene">
     <div className="company-intro"><p className="eyebrow">03 / COMPANY</p><h2>What is Arima Finance?</h2><div><p className="lead">Arima Finance is an independent quantitative finance and financial technology company developing intelligent solutions for financial markets.</p><p>We combine quantitative research, artificial intelligence, financial engineering and software development to build systems for investors, traders, institutions and financial professionals.</p></div></div>

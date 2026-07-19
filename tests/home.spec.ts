@@ -4,6 +4,8 @@ async function openFresh(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(250);
 }
 
 test("renders the complete company narrative without runtime errors", async ({ page }) => {
@@ -35,6 +37,9 @@ test("skip, persistent navigation and replay follow the intended lifecycle", asy
 test("first-time desktop scroll visibly advances and replay recreates the candle timeline", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop scroll-timeline validation");
   await openFresh(page);
+  await expect.poll(() => page.evaluate(() => document.body.dataset.arimaHydrated)).toBe("true");
+  await expect.poll(() => page.locator(".pin-spacer").count()).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   const before = await page.locator(".candle-body").evaluate((node) => getComputedStyle(node).height);
   await page.mouse.wheel(0, 1200);
   await page.waitForTimeout(900);
