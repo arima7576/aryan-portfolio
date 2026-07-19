@@ -43,6 +43,13 @@ const divisionDetails = [
   },
 ];
 
+const founderStages = [
+  ["ENGINEERING FOUNDATIONS", "Avionics Engineering", "Systems Thinking", "Probability & Modelling"],
+  ["FINANCE & MARKETS", "Finance & Accounting", "Financial Markets", "Investment Research", "Risk Analysis"],
+  ["QUANTITATIVE INTELLIGENCE", "Quantitative Research", "Financial Modelling", "Algorithm Development", "Portfolio Analytics"],
+];
+const founderCapabilities = ["Financial Modelling", "Valuation", "Market Research", "Quantitative Analysis", "ARIMA / SARIMA / SARIMAX", "Monte Carlo Simulation", "Portfolio Optimisation", "Volatility Analysis", "Risk Management", "Algorithmic Trading", "Python", "TradingView / Pine Script", "Financial Presentation"];
+
 export function PhaseOneFilm() {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -86,19 +93,32 @@ export function PhaseOneFilm() {
   const portfolioDisclosure = useRef<HTMLDivElement>(null);
   const transitionBeam = useRef<HTMLDivElement>(null);
   const transitionDarkness = useRef<HTMLDivElement>(null);
+  const founderScene = useRef<HTMLDivElement>(null);
+  const founderBeam = useRef<HTMLDivElement>(null);
+  const founderFigure = useRef<HTMLDivElement>(null);
+  const founderFigurePaths = useRef<SVGPathElement[]>([]);
+  const founderIdentity = useRef<HTMLDivElement>(null);
+  const founderStageNodes = useRef<HTMLElement[]>([]);
+  const experienceField = useRef<HTMLDivElement>(null);
+  const capabilityField = useRef<HTMLDivElement>(null);
+  const capabilityNodes = useRef<HTMLSpanElement[]>([]);
+  const founderConnections = useRef<HTMLDivElement>(null);
+  const founderFinal = useRef<HTMLDivElement>(null);
+  const projectCorridor = useRef<HTMLDivElement>(null);
+  const founderFade = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (!root.current || !stage.current || !ensureAnimationPlugins()) return;
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       if (reducedMotion) {
-        gsap.set([cityScene.current, avenue.current, headquarters.current, hall.current, divisionOrbit.current, portfolioDisclosure.current], { opacity: 1 });
+        gsap.set([cityScene.current, avenue.current, headquarters.current, hall.current, divisionOrbit.current, portfolioDisclosure.current, founderScene.current, founderFigure.current, founderFinal.current], { opacity: 1 });
         gsap.set(destination.current, { opacity: 0 });
         gsap.set([firstLight.current, candle.current, portal.current, dataCloud.current, convergence.current, afMark.current, identity.current, rotationChamber.current], { opacity: 0 });
         return;
       }
 
-      const travel = innerWidth < 768 ? 17500 : 24000;
+      const travel = innerWidth < 768 ? 25000 : 34000;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -235,7 +255,44 @@ export function PhaseOneFilm() {
         .fromTo(transitionBeam.current, { opacity: 0, scaleY: .02, scaleX: .3 }, { opacity: 1, scaleY: 1, scaleX: 1, duration: 8, ease: "power2.out" }, 330)
         .to(transitionBeam.current, { scale: 7, opacity: .92, duration: 6, ease: "power3.in" }, 338)
         .fromTo(transitionDarkness.current, { opacity: 0 }, { opacity: 1, duration: 8, ease: "power2.inOut" }, 340)
-        .to(transitionBeam.current, { opacity: 0, duration: 6 }, 342);
+        .to(transitionBeam.current, { opacity: 0, duration: 6 }, 342)
+
+        .fromTo(founderScene.current, { opacity: 0 }, { opacity: 1, duration: 7 }, 350)
+        .fromTo(founderBeam.current, { opacity: 0, scaleY: .05 }, { opacity: 1, scaleY: 1, duration: 12, ease: "power2.out" }, 350)
+        .fromTo(founderFigure.current, { opacity: 0, scale: .65, rotateY: -24 }, { opacity: 1, scale: 1, rotateY: 0, duration: 20, ease: "power2.out" }, 355)
+        .fromTo(founderFigurePaths.current, { strokeDashoffset: 1000 }, { strokeDashoffset: 0, duration: 22, stagger: 1.1, ease: "power2.out" }, 354)
+        .to(founderBeam.current, { opacity: .18, scaleX: 2.4, duration: 12 }, 363)
+        .to(founderFigure.current, { rotateY: 20, rotateX: -2, duration: 16, ease: "sine.inOut" }, 368)
+        .fromTo(founderIdentity.current, { opacity: 0, x: 70 }, { opacity: 1, x: 0, duration: 12, ease: "power2.out" }, 372)
+        .to({}, { duration: 8 }, 380)
+        .to(founderIdentity.current, { opacity: 0, x: -40, duration: 7 }, 388)
+
+        .fromTo(founderStageNodes.current[0], { opacity: 0, x: -90 }, { opacity: 1, x: 0, duration: 10 }, 390)
+        .to(founderFigure.current, { rotateY: -10, x: 110, duration: 14 }, 390)
+        .to(founderStageNodes.current[0], { opacity: 0, x: -45, duration: 7 }, 404)
+        .fromTo(founderStageNodes.current[1], { opacity: 0, x: 90 }, { opacity: 1, x: 0, duration: 10 }, 408)
+        .to(founderFigure.current, { rotateY: 10, x: -100, duration: 14 }, 408)
+        .to(founderStageNodes.current[1], { opacity: 0, x: 45, duration: 7 }, 422)
+        .fromTo(founderStageNodes.current[2], { opacity: 0, scale: .8 }, { opacity: 1, scale: 1, duration: 10 }, 426)
+        .to(founderFigure.current, { rotateY: 0, x: 0, duration: 12 }, 426)
+        .to(founderStageNodes.current[2], { opacity: 0, scale: .92, duration: 7 }, 440)
+
+        .fromTo(experienceField.current, { opacity: 0, z: -500 }, { opacity: 1, z: 0, duration: 12 }, 442)
+        .to(experienceField.current, { rotateY: -7, duration: 10, ease: "sine.inOut" }, 449)
+        .to(experienceField.current, { opacity: 0, z: 250, duration: 8 }, 458)
+        .fromTo(capabilityField.current, { opacity: 0, scale: .72 }, { opacity: 1, scale: 1, duration: 10 }, 458)
+        .fromTo(capabilityNodes.current, { opacity: 0, scale: .2 }, { opacity: 1, scale: 1, duration: 10, stagger: .45 }, 460)
+        .to(capabilityField.current, { rotateY: 8, duration: 13, ease: "sine.inOut" }, 464)
+        .to(capabilityField.current, { opacity: 0, scale: .4, duration: 9 }, 475)
+
+        .fromTo(founderConnections.current, { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: 10 }, 474)
+        .to(founderFigure.current, { scale: .65, y: 35, duration: 10 }, 474)
+        .to(founderConnections.current, { opacity: 0, scale: 1.2, duration: 8 }, 486)
+        .fromTo(founderFinal.current, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 9 }, 486)
+        .fromTo(projectCorridor.current, { opacity: 0, scale: .55 }, { opacity: 1, scale: 1, duration: 10 }, 488)
+        .to(founderFigure.current, { rotateY: 24, x: -120, opacity: .42, duration: 11, ease: "sine.inOut" }, 488)
+        .to(founderFinal.current, { opacity: .58, y: -18, duration: 7 }, 496)
+        .fromTo(founderFade.current, { opacity: 0 }, { opacity: .72, duration: 6 }, 494);
     }, root);
 
     return () => {
@@ -346,6 +403,47 @@ export function PhaseOneFilm() {
           </div>
           <div ref={transitionBeam} className="founder-transition-beam" aria-hidden="true"/>
           <div ref={transitionDarkness} className="phase-three-darkness" aria-hidden="true"/>
+        </div>
+
+        <div ref={founderScene} className="founder-film" aria-label="Founder of Arima Finance">
+          <div ref={founderBeam} className="founder-drawing-beam" aria-hidden="true"/>
+          <div className="founder-blueprint" aria-hidden="true"><span>Σ P(X)</span><span>DCF / WACC</span><span>PYTHON · SERIES</span><span>AVIONICS / SYS</span><i/><i/><i/></div>
+
+          <div ref={founderFigure} className="founder-figure" aria-label="Abstract line-art human figure">
+            <svg viewBox="0 0 420 760" role="img" aria-label="Abstract non-photorealistic Founder silhouette">
+              <path ref={(node) => { if (node) founderFigurePaths.current[0] = node; }} pathLength="1000" d="M210 70 C151 70 128 124 139 177 C148 222 171 249 210 255 C249 249 272 222 281 177 C292 124 269 70 210 70Z"/>
+              <path ref={(node) => { if (node) founderFigurePaths.current[1] = node; }} pathLength="1000" d="M139 164 C102 205 104 275 135 309 M281 164 C318 205 316 275 285 309 M145 280 C88 321 60 421 55 645 M275 280 C332 321 360 421 365 645"/>
+              <path ref={(node) => { if (node) founderFigurePaths.current[2] = node; }} pathLength="1000" d="M145 280 C166 327 254 327 275 280 M116 354 C149 387 271 387 304 354 M94 445 C151 472 269 472 326 445 M72 553 C148 579 272 579 348 553 M55 645 C135 680 285 680 365 645"/>
+              <path ref={(node) => { if (node) founderFigurePaths.current[3] = node; }} pathLength="1000" d="M210 255 V700 M128 342 L292 626 M292 342 L128 626"/>
+            </svg>
+            <div className="figure-points">{Array.from({ length: 22 }, (_, index) => <i style={{ "--point": index } as React.CSSProperties} key={index}/>)}</div>
+          </div>
+
+          <div ref={founderIdentity} className="founder-identity"><small>THE FOUNDER</small><h2>ARYAN HEIDARI</h2><strong>Founder of Arima Finance</strong><span>Finance · Quantitative Research · Technology</span></div>
+
+          <div className="founder-story">
+            {founderStages.map((stageData, index) => <article ref={(node) => { if (node) founderStageNodes.current[index] = node; }} className={`founder-stage founder-stage-${index + 1}`} key={stageData[0]}><small>0{index + 1}</small><h3>{stageData[0]}</h3><div>{stageData.slice(1).map((line) => <span key={line}>{line}</span>)}</div>
+              {index === 0 && <p>BSc Avionics Engineering<br/><b>National Aviation University, Kyiv</b></p>}
+              {index === 1 && <p>MSc Finance &amp; Accounting<br/><b>Anglia Ruskin University, London</b></p>}
+            </article>)}
+          </div>
+
+          <div ref={experienceField} className="experience-field">
+            <div><small>PROFESSIONAL ENVIRONMENTS</small><h3>Research translated into execution.</h3></div>
+            <span className="experience-marker marker-a"><b>Bank of England</b><i>Financial Markets Research</i></span>
+            <span className="experience-marker marker-b"><b>EY</b><i>Financial Advisory</i></span>
+            <span className="experience-marker marker-c"><b>Samuel &amp; Co Trading</b><i>FX Trading</i></span>
+            <span className="experience-marker marker-d"><b>AEXT</b><i>Technology Entrepreneurship</i></span>
+            <p>Organisation names refer to the founder&apos;s professional background and do not imply endorsement or affiliation with Arima Finance.</p>
+          </div>
+
+          <div ref={capabilityField} className="capability-field"><div className="capability-core">AH<small>CONNECTED INTELLIGENCE</small></div>{founderCapabilities.map((capability, index) => <span ref={(node) => { if (node) capabilityNodes.current[index] = node; }} style={{ "--node": index } as React.CSSProperties} key={capability}>{capability}</span>)}</div>
+
+          <div ref={founderConnections} className="founder-connections"><div className="connection-founder">FOUNDER</div><i/><i/><i/><strong>RISK MANAGEMENT CORE</strong><span>ARIMA FINANCE ENGINE</span><span>AF PORTFOLIO LAB</span><span>FINANCIAL RESEARCH &amp; ADVISORY PROJECTS</span><p>A shared risk framework connects portfolio research, market analysis and algorithmic trade management.</p></div>
+
+          <div ref={founderFinal} className="founder-final"><small>ARYAN HEIDARI</small><strong>Founder of Arima Finance</strong><p>Building financial systems where research, technology and risk discipline converge.</p></div>
+          <div ref={projectCorridor} className="project-corridor" aria-hidden="true"><i/><i/><i/><span/><span/><span/></div>
+          <div ref={founderFade} className="founder-end-fade" aria-hidden="true"/>
         </div>
       </div>
     </section>

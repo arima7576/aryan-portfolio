@@ -24,10 +24,10 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   await openFilm(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  expect(maxScroll).toBeGreaterThanOrEqual(23_500);
+  expect(maxScroll).toBeGreaterThanOrEqual(33_500);
 
   const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
-  for (const progress of [0, 20 / 350, 40 / 350, 60 / 350, 80 / 350, 100 / 350]) {
+  for (const progress of [0, 20 / 500, 40 / 500, 60 / 500, 80 / 500, 100 / 500]) {
     await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
     await page.waitForTimeout(1_300);
     states.push(await page.evaluate((value) => ({
@@ -52,7 +52,7 @@ test("Phase 2 continues through rotation, districts and destination", async ({ p
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (phase: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 350));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 500));
     await page.waitForTimeout(1_300);
   };
 
@@ -84,7 +84,7 @@ test("Phase 3 enters headquarters and reveals three spatial divisions", async ({
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (position: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 350));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 500));
     await page.waitForTimeout(1_300);
   };
 
@@ -106,13 +106,41 @@ test("Phase 3 closes into a light beam and darkness without revealing later cont
   test.skip(isMobile, "desktop endpoint validation");
   await openFilm(page);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (336 / 350));
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (336 / 500));
   await page.waitForTimeout(1_300);
   await expect(page.locator(".founder-transition-beam")).toBeVisible();
-  await page.evaluate((top) => window.scrollTo(0, top), maxScroll);
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (350 / 500));
   await page.waitForTimeout(1_300);
   await expect(page.locator(".phase-three-darkness")).toHaveCSS("opacity", "1");
   await expect(page.locator(".founder-scene, .contact-scene, .cinematic-nav")).toHaveCount(0);
+});
+
+test("Phase 4 reveals the Founder story and stops before Projects", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop Founder sequence validation");
+  await openFilm(page);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  const seek = async (position: number) => {
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 500));
+    await page.waitForTimeout(1_300);
+  };
+  await seek(378);
+  await expect(page.locator(".founder-identity h2")).toHaveText("ARYAN HEIDARI");
+  await expect(page.locator(".founder-identity h2")).toBeVisible();
+  await seek(398);
+  await expect(page.getByText("ENGINEERING FOUNDATIONS", { exact: true })).toBeVisible();
+  await seek(416);
+  await expect(page.getByText("FINANCE & MARKETS", { exact: true })).toBeVisible();
+  await seek(434);
+  await expect(page.getByRole("heading", { name: "QUANTITATIVE INTELLIGENCE", exact: true })).toBeVisible();
+  await seek(450);
+  await expect(page.locator(".experience-field").getByText("Bank of England", { exact: true })).toBeVisible();
+  await seek(468);
+  await expect(page.getByText("Monte Carlo Simulation", { exact: true })).toBeVisible();
+  await seek(482);
+  await expect(page.getByText("RISK MANAGEMENT CORE", { exact: true })).toBeVisible();
+  await seek(496);
+  await expect(page.getByText("Building financial systems where research, technology and risk discipline converge.", { exact: true })).toBeVisible();
+  await expect(page.locator(".portfolio-scene, .project-panel, .contact-scene, .cinematic-nav")).toHaveCount(0);
 });
 
 test("reduced motion reveals the readable static headquarters", async ({ page }) => {
