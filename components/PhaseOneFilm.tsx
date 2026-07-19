@@ -21,6 +21,28 @@ const institutionDistricts = [
 
 const rotationLabels = ["CAPITAL", "LIQUIDITY", "RISK", "EXECUTION", "ALPHA", "MARKET DATA"];
 
+const intelligenceStreams = ["VALUATION", "RESEARCH", "RISK", "ALLOCATION", "MARKET DATA", "EXECUTION"];
+const divisionDetails = [
+  {
+    index: "01",
+    title: "Investment Banking & Financial Intelligence",
+    lead: "Institutional research and decision intelligence",
+    items: ["Financial modelling", "Valuation", "Investment research", "Investment memoranda", "Market intelligence", "Company analysis", "Scenario analysis", "Forecasting", "Financial data engineering", "Risk analysis", "Quantitative modelling", "Capital market research", "Professional presentation materials"],
+  },
+  {
+    index: "02",
+    title: "Projects & Technology",
+    lead: "Arima Finance Engine",
+    items: ["Algorithmic trading systems", "Financial data platforms", "AI research", "Quantitative tools", "Trading automation", "Risk management systems", "Financial dashboards", "Portfolio analytics", "Technology prototypes", "Research projects", "Client and collaborative projects", "Personal Risk Management Core"],
+  },
+  {
+    index: "03",
+    title: "AF Portfolio Lab",
+    lead: "Live-funded research environment",
+    items: ["Equities", "IPO opportunities", "Options", "Cash", "Limited futures allocation", "Portfolio value", "Weekly return", "Total return", "Drawdown", "Allocation", "Risk score", "Open positions", "Asset allocation", "Performance charts", "Exposure"],
+  },
+];
+
 export function PhaseOneFilm() {
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -50,18 +72,31 @@ export function PhaseOneFilm() {
   const districts = useRef<HTMLDivElement[]>([]);
   const roadPulse = useRef<HTMLDivElement>(null);
   const destination = useRef<HTMLDivElement>(null);
+  const headquarters = useRef<HTMLDivElement>(null);
+  const entrance = useRef<HTMLDivElement>(null);
+  const entranceDoors = useRef<HTMLDivElement[]>([]);
+  const hall = useRef<HTMLDivElement>(null);
+  const hallRing = useRef<HTMLDivElement>(null);
+  const intelligenceCore = useRef<HTMLDivElement>(null);
+  const coreShells = useRef<HTMLSpanElement[]>([]);
+  const coreIdentity = useRef<HTMLDivElement>(null);
+  const coreStreams = useRef<HTMLSpanElement[]>([]);
+  const divisionOrbit = useRef<HTMLDivElement>(null);
+  const divisionPlatforms = useRef<HTMLElement[]>([]);
+  const portfolioDisclosure = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (!root.current || !stage.current || !ensureAnimationPlugins()) return;
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const context = gsap.context(() => {
       if (reducedMotion) {
-        gsap.set([cityScene.current, avenue.current, destination.current], { opacity: 1 });
+        gsap.set([cityScene.current, avenue.current, headquarters.current, hall.current, divisionOrbit.current, portfolioDisclosure.current], { opacity: 1 });
+        gsap.set(destination.current, { opacity: 0 });
         gsap.set([firstLight.current, candle.current, portal.current, dataCloud.current, convergence.current, afMark.current, identity.current, rotationChamber.current], { opacity: 0 });
         return;
       }
 
-      const travel = innerWidth < 768 ? 10000 : 14000;
+      const travel = innerWidth < 768 ? 16000 : 22000;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -156,7 +191,37 @@ export function PhaseOneFilm() {
         .to(districts.current[4], { opacity: .22, duration: 5 }, 194)
         .to(avenueWorld.current, { scale: 1.92, x: 0, y: -88, duration: 10, ease: "power1.inOut" }, 190)
         .fromTo(destination.current, { opacity: 0, scale: .25, y: 50 }, { opacity: 1, scale: 1, y: 0, duration: 5, ease: "power2.out" }, 195)
-        .to(cityFog.current, { opacity: .22, duration: 5 }, 195);
+        .to(cityFog.current, { opacity: .22, duration: 5 }, 195)
+
+        .fromTo(headquarters.current, { opacity: 0 }, { opacity: 1, duration: 8 }, 200)
+        .to(destination.current, { scale: 3.4, y: 80, opacity: 0, filter: "blur(10px)", duration: 18, ease: "power2.in" }, 200)
+        .to(avenueWorld.current, { scale: 2.55, y: -130, opacity: .18, duration: 18, ease: "power2.in" }, 200)
+        .fromTo(entrance.current, { opacity: 0, scale: .35, z: -500 }, { opacity: 1, scale: 1, z: 0, duration: 18, ease: "power2.inOut" }, 200)
+        .to(entrance.current, { filter: "brightness(1.5)", duration: 8 }, 212)
+        .to(entranceDoors.current[0], { xPercent: -110, duration: 9, ease: "power2.inOut" }, 216)
+        .to(entranceDoors.current[1], { xPercent: 110, duration: 9, ease: "power2.inOut" }, 216)
+        .to(entrance.current, { scale: 5.4, opacity: 0, duration: 12, ease: "power3.in" }, 224)
+        .fromTo(hall.current, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 12, ease: "power2.out" }, 226)
+        .fromTo(hallRing.current, { rotateX: 68, rotateZ: -18, scale: .65 }, { rotateX: 58, rotateZ: 0, scale: 1, duration: 18 }, 228)
+        .fromTo(coreStreams.current, { opacity: 0, scaleX: .15 }, { opacity: .78, scaleX: 1, duration: 15, stagger: .6 }, 230)
+
+        .fromTo(intelligenceCore.current, { opacity: 0, scale: .18 }, { opacity: 1, scale: 1, duration: 16, ease: "power2.out" }, 230)
+        .fromTo(coreShells.current, { rotate: -55, scale: .45, opacity: 0 }, { rotate: 0, scale: 1, opacity: 1, duration: 18, stagger: 1.2 }, 232)
+        .to(coreShells.current[0], { x: -150, rotateY: -62, duration: 12, ease: "power2.inOut" }, 246)
+        .to(coreShells.current[1], { x: 150, rotateY: 62, duration: 12, ease: "power2.inOut" }, 246)
+        .fromTo(coreIdentity.current, { opacity: 0, scale: .7, letterSpacing: ".5em" }, { opacity: 1, scale: 1, letterSpacing: ".16em", duration: 12, ease: "power2.out" }, 246)
+        .to(hall.current, { rotateY: -13, rotateX: 2, duration: 18, ease: "sine.inOut" }, 250)
+        .to(hall.current, { rotateY: 12, rotateX: -2, duration: 18, ease: "sine.inOut" }, 268)
+
+        .to([intelligenceCore.current, coreIdentity.current], { scale: .42, opacity: .32, duration: 12, ease: "power2.inOut" }, 270)
+        .fromTo(divisionOrbit.current, { opacity: 0, scale: .5, rotateY: -26 }, { opacity: 1, scale: 1, rotateY: 0, duration: 14, ease: "power2.out" }, 272)
+        .fromTo(divisionPlatforms.current, { opacity: 0, y: 160, rotateX: 18 }, { opacity: 1, y: 0, rotateX: 0, duration: 14, stagger: 3, ease: "power2.out" }, 274)
+        .to(divisionOrbit.current, { rotateY: -18, rotateX: 2, duration: 17, ease: "sine.inOut" }, 284)
+        .to(divisionOrbit.current, { rotateY: 18, rotateX: -2, duration: 17, ease: "sine.inOut" }, 301)
+        .to(divisionPlatforms.current[0], { opacity: .28, scale: .88, duration: 8 }, 292)
+        .to(divisionPlatforms.current[1], { opacity: .32, scale: .9, duration: 8 }, 302)
+        .to(divisionPlatforms.current[2], { scale: 1.08, duration: 10 }, 302)
+        .fromTo(portfolioDisclosure.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 10 }, 310);
     }, root);
 
     return () => {
@@ -227,6 +292,44 @@ export function PhaseOneFilm() {
             </div>
           </div>
           <small className="institution-disclaimer">Institution names are shown as part of the global financial landscape and do not imply affiliation, partnership or endorsement.</small>
+        </div>
+
+        <div ref={headquarters} className="af-headquarters" aria-label="Arima Finance intelligence headquarters">
+          <div ref={entrance} className="af-entrance">
+            <div className="entrance-emblem"><span>AF</span><small>ARIMA FINANCE</small></div>
+            <div ref={(node) => { if (node) entranceDoors.current[0] = node; }} className="entrance-door door-left"/>
+            <div ref={(node) => { if (node) entranceDoors.current[1] = node; }} className="entrance-door door-right"/>
+            <div className="entrance-floor"><i/><i/><i/></div>
+          </div>
+
+          <div ref={hall} className="intelligence-hall">
+            <div className="hall-architecture" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div>
+            <div ref={hallRing} className="hall-ring" aria-hidden="true"><i/><i/><i/></div>
+            <div className="core-streams" aria-hidden="true">{intelligenceStreams.map((stream, index) => <span ref={(node) => { if (node) coreStreams.current[index] = node; }} style={{ "--stream": index } as React.CSSProperties} key={stream}><b>{stream}</b></span>)}</div>
+
+            <div ref={intelligenceCore} className="intelligence-core">
+              <span ref={(node) => { if (node) coreShells.current[0] = node; }} className="core-shell shell-a"/>
+              <span ref={(node) => { if (node) coreShells.current[1] = node; }} className="core-shell shell-b"/>
+              <i className="core-light"/>
+            </div>
+            <div ref={coreIdentity} className="core-identity">
+              <span>AF</span><strong>ARIMA FINANCE</strong><small>Financial Intelligence</small>
+              <div><b>Research</b><b>Portfolio Solutions</b></div>
+            </div>
+
+            <div ref={divisionOrbit} className="division-orbit">
+              {divisionDetails.map((division, divisionIndex) => <article ref={(node) => { if (node) divisionPlatforms.current[divisionIndex] = node; }} className={`division-platform division-${divisionIndex + 1}`} key={division.title}>
+                <div className="platform-surface"><span>{division.index}</span><small>{division.lead}</small><h2>{division.title}</h2>
+                  {divisionIndex === 1 && <strong className="engine-emphasis">ARIMA FINANCE ENGINE</strong>}
+                  {divisionIndex === 2 && <p>A live-funded research environment using the founder&apos;s own capital to study structured allocation and risk management.</p>}
+                  <div className="division-data">{division.items.map((item) => <i key={item}>{item}</i>)}</div>
+                  {divisionIndex === 2 && <div className="portfolio-metrics"><b>PORTFOLIO VALUE</b><b>WEEKLY RETURN</b><b>DRAWDOWN</b><b>RISK SCORE</b><svg viewBox="0 0 420 80"><path d="M0 65 C45 48 72 62 105 39 S168 51 202 24 S264 41 300 20 S364 27 420 5"/></svg></div>}
+                </div>
+              </article>)}
+            </div>
+
+            <div ref={portfolioDisclosure} className="model-disclosure"><strong>Model Portfolio Disclosure</strong><span>The investor profiles presented are internal research models. The underlying capital belongs to the founder. Arima Finance does not currently manage external client assets through these profiles. Information is presented for research, demonstration and technology-development purposes only.</span></div>
+          </div>
         </div>
       </div>
     </section>

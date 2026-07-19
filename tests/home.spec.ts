@@ -24,10 +24,10 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   await openFilm(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  expect(maxScroll).toBeGreaterThanOrEqual(13_500);
+  expect(maxScroll).toBeGreaterThanOrEqual(21_500);
 
   const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
-  for (const progress of [0, .1, .2, .3, .4, .5]) {
+  for (const progress of [0, 20 / 320, 40 / 320, 60 / 320, 80 / 320, 100 / 320]) {
     await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
     await page.waitForTimeout(1_300);
     states.push(await page.evaluate((value) => ({
@@ -52,7 +52,7 @@ test("Phase 2 continues through rotation, districts and destination", async ({ p
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (phase: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (.5 + phase / 200));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 320));
     await page.waitForTimeout(1_300);
   };
 
@@ -78,11 +78,35 @@ test("Phase 2 continues through rotation, districts and destination", async ({ p
   await expect(page.locator(".arima-destination").getByText("ARIMA FINANCE")).toBeVisible();
 });
 
-test("reduced motion reveals the readable static destination", async ({ page }) => {
+test("Phase 3 enters headquarters and reveals three spatial divisions", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop Phase 3 state validation");
+  await openFilm(page);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  const seek = async (position: number) => {
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 320));
+    await page.waitForTimeout(1_300);
+  };
+
+  await seek(214);
+  await expect(page.locator(".af-entrance")).toBeVisible();
+  await seek(238);
+  await expect(page.locator(".intelligence-hall")).toBeVisible();
+  await seek(258);
+  await expect(page.locator(".core-identity").getByText("ARIMA FINANCE")).toBeVisible();
+  await seek(288);
+  await expect(page.getByText("Investment Banking & Financial Intelligence", { exact: true })).toBeVisible();
+  await expect(page.getByText("Projects & Technology", { exact: true })).toBeVisible();
+  await seek(318);
+  await expect(page.getByText("AF Portfolio Lab", { exact: true })).toBeVisible();
+  await expect(page.locator(".model-disclosure")).toBeVisible();
+});
+
+test("reduced motion reveals the readable static headquarters", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openFilm(page);
-  await expect(page.locator(".arima-destination")).toBeVisible();
-  await expect(page.locator(".arima-destination").getByText("ARIMA FINANCE")).toBeVisible();
+  await expect(page.locator(".af-headquarters")).toBeVisible();
+  await expect(page.getByText("AF Portfolio Lab", { exact: true })).toBeVisible();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
