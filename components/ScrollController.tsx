@@ -58,6 +58,8 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
         lenisRunning,
         gsapLoaded: Boolean(gsap),
         scrollTriggerCount: ScrollTrigger.getAll().length,
+        pinSpacerCount: document.querySelectorAll(".pin-spacer").length,
+        timelineCreated: ScrollTrigger.getAll().length > 0,
         activeScene: activeScene(),
         progress: ScrollTrigger.maxScroll(window) ? window.scrollY / ScrollTrigger.maxScroll(window) : 0,
       } }));
