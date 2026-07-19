@@ -24,10 +24,10 @@ test("one native-scroll master timeline produces six distinct desktop states", a
   await openFilm(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  expect(maxScroll).toBeGreaterThanOrEqual(45_500);
+  expect(maxScroll).toBeGreaterThanOrEqual(55_500);
 
   const states: Array<{ progress: number; candle: string; universe: string; af: string; name: string }> = [];
-  for (const progress of [0, 20 / 680, 40 / 680, 60 / 680, 80 / 680, 100 / 680]) {
+  for (const progress of [0, 20 / 830, 40 / 830, 60 / 830, 80 / 830, 100 / 830]) {
     await page.evaluate((top) => window.scrollTo(0, top), maxScroll * progress);
     await page.waitForTimeout(1_300);
     states.push(await page.evaluate((value) => ({
@@ -52,7 +52,7 @@ test("Phase 2 continues through rotation, districts and destination", async ({ p
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (phase: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 680));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * ((100 + phase) / 830));
     await page.waitForTimeout(1_300);
   };
 
@@ -84,7 +84,7 @@ test("Phase 3 enters headquarters and reveals three spatial divisions", async ({
   await expect(page.locator(".pin-spacer")).toHaveCount(1);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (position: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 680));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 830));
     await page.waitForTimeout(1_300);
   };
 
@@ -106,10 +106,10 @@ test("Phase 3 closes into a light beam and darkness without revealing later cont
   test.skip(isMobile, "desktop endpoint validation");
   await openFilm(page);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (336 / 680));
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (336 / 830));
   await page.waitForTimeout(1_300);
   await expect(page.locator(".founder-transition-beam")).toBeVisible();
-  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (350 / 680));
+  await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (350 / 830));
   await page.waitForTimeout(1_300);
   await expect(page.locator(".phase-three-darkness")).toHaveCSS("opacity", "1");
   await expect(page.locator(".founder-scene, .contact-scene, .cinematic-nav")).toHaveCount(0);
@@ -120,7 +120,7 @@ test("Phase 4 reveals the Founder story and stops before Projects", async ({ pag
   await openFilm(page);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (position: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 680));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 830));
     await page.waitForTimeout(1_300);
   };
   await seek(378);
@@ -148,7 +148,7 @@ test("Phase 5 travels through five project worlds and stops before Contact", asy
   await openFilm(page);
   const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
   const seek = async (position: number) => {
-    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 680));
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 830));
     await page.waitForTimeout(1_300);
   };
   await seek(514);
@@ -176,6 +176,39 @@ test("Phase 5 travels through five project worlds and stops before Contact", asy
   await seek(676);
   await expect(page.locator(".project-end-corridor")).toBeVisible();
   await expect(page.locator(".contact-scene, .cinematic-nav")).toHaveCount(0);
+});
+
+test("Final chapter completes the journey and reveals standard website mode only on action", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop final chapter validation");
+  await openFilm(page);
+  const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+  const seek = async (position: number) => {
+    await page.evaluate((top) => window.scrollTo(0, top), maxScroll * (position / 830));
+    await page.waitForTimeout(1_300);
+  };
+
+  await seek(706);
+  await expect(page.locator(".connect-control-room")).toBeVisible();
+  await seek(722);
+  await expect(page.getByRole("heading", { name: "Every meaningful journey begins with a conversation.", exact: true })).toBeVisible();
+  await seek(742);
+  await expect(page.getByText("Work With Arima", { exact: true })).toBeVisible();
+  await expect(page.getByText("Research Collaboration", { exact: true })).toBeVisible();
+  await expect(page.getByText("Let's Build Together", { exact: true })).toBeVisible();
+  await seek(752);
+  await expect(page.locator(".connect-details").getByText("Email", { exact: true })).toBeVisible();
+  await expect(page.locator(".connect-details").getByText("Company Profile (PDF)", { exact: true })).toBeVisible();
+  await seek(812);
+  await expect(page.locator(".final-af-reveal").getByText("ARIMA FINANCE", { exact: true })).toBeVisible();
+  await seek(824);
+  await expect(page.getByRole("button", { name: "Replay Journey", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enter Website", exact: true })).toBeVisible();
+  await expect(page.locator("#standard-website")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Enter Website", exact: true }).click();
+  await expect(page.locator("#standard-website")).toBeVisible();
+  await expect(page.locator("#standard-website").getByText("Home", { exact: true })).toBeVisible();
+  await expect(page.locator("#standard-contact").getByText("aryan.hd@outlook.com", { exact: true })).toBeVisible();
 });
 
 test("reduced motion reveals the readable static headquarters", async ({ page }) => {

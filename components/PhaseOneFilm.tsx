@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ensureAnimationPlugins, gsap, ScrollTrigger } from "@/lib/animation-runtime";
 
 const marketData = [
@@ -53,8 +53,22 @@ const engineWorkflow = ["Market Data", "Macro Context", "Liquidity Analysis", "E
 const engineControls = ["Risk per setup", "Position sizing", "Exposure limits", "Drawdown limits", "Round-level controls", "Daily-loss controls", "Stop management", "Reward-to-risk validation", "Trade lifecycle management"];
 const portfolioProfiles = ["Growth 01", "Balanced 02", "Income 03", "Opportunity 04", "Defensive 05"];
 const quantSystems = [["AEXT LTD Robot", "Live Research"], ["Precision Confluence Strategy", "Historical Study"], ["Multi-timeframe market framework", "Prototype"], ["EMA / MACD / RSI systems", "Research Prototype"], ["TradingView / Pine Script tools", "In Development"]];
+const connectGateways = [
+  ["Work With Arima", "Institutional research, financial intelligence and technology."],
+  ["Research Collaboration", "Academic, quantitative and industry collaboration."],
+  ["Let's Build Together", "New ideas, products and long-term partnerships."],
+];
+const contactLinks = [
+  ["Email", "aryan.hd@outlook.com", "mailto:aryan.hd@outlook.com"],
+  ["LinkedIn", "Public profile", "#traditional-contact"],
+  ["GitHub", "github.com/arima7576", "https://github.com/arima7576"],
+  ["Company Profile (PDF)", "PDF forthcoming", "#traditional-contact"],
+  ["Resume / CV (PDF)", "PDF forthcoming", "#traditional-contact"],
+];
+const websiteNav = ["Home", "About", "Projects", "Portfolio Lab", "Founder", "Research", "Contact"];
 
 export function PhaseOneFilm() {
+  const [websiteMode, setWebsiteMode] = useState(false);
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const ambient = useRef<HTMLDivElement>(null);
@@ -128,6 +142,28 @@ export function PhaseOneFilm() {
   const projectConstellation = useRef<HTMLDivElement>(null);
   const projectEndCorridor = useRef<HTMLDivElement>(null);
   const projectEndFade = useRef<HTMLDivElement>(null);
+  const connectFilm = useRef<HTMLDivElement>(null);
+  const connectCorridor = useRef<HTMLDivElement>(null);
+  const controlRoom = useRef<HTMLDivElement>(null);
+  const connectMessage = useRef<HTMLDivElement>(null);
+  const gatewayHall = useRef<HTMLDivElement>(null);
+  const contactDetails = useRef<HTMLDivElement>(null);
+  const exitFlight = useRef<HTMLDivElement>(null);
+  const finalDataCollapse = useRef<HTMLDivElement>(null);
+  const finalAfReveal = useRef<HTMLDivElement>(null);
+  const finalActions = useRef<HTMLDivElement>(null);
+
+  const replayJourney = () => {
+    setWebsiteMode(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const enterWebsite = () => {
+    setWebsiteMode(true);
+    window.setTimeout(() => {
+      document.getElementById("standard-website")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
 
   useLayoutEffect(() => {
     if (!root.current || !stage.current || !ensureAnimationPlugins()) return;
@@ -140,7 +176,7 @@ export function PhaseOneFilm() {
         return;
       }
 
-      const travel = innerWidth < 768 ? 34000 : 46200;
+      const travel = innerWidth < 768 ? 41500 : 56440;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -361,7 +397,30 @@ export function PhaseOneFilm() {
         .to(projectConstellation.current, { scale: .55, opacity: .35, duration: 10 }, 664)
         .fromTo(projectEndCorridor.current, { opacity: 0, scale: .5 }, { opacity: 1, scale: 1, duration: 10 }, 662)
         .to(projectEndCorridor.current, { scale: 2.4, duration: 10, ease: "power2.in" }, 670)
-        .fromTo(projectEndFade.current, { opacity: 0 }, { opacity: .86, duration: 8 }, 672);
+        .fromTo(projectEndFade.current, { opacity: 0 }, { opacity: .86, duration: 8 }, 672)
+
+        .fromTo(connectFilm.current, { opacity: 0 }, { opacity: 1, duration: 8 }, 680)
+        .fromTo(connectCorridor.current, { opacity: 0, scale: .45 }, { opacity: 1, scale: 1, duration: 14, ease: "power2.out" }, 680)
+        .to(projectsFilm.current, { opacity: 0, duration: 10 }, 682)
+        .to(connectCorridor.current, { scale: 2.8, opacity: .28, duration: 18, ease: "power2.in" }, 696)
+        .fromTo(controlRoom.current, { opacity: 0, scale: 1.35, rotateX: 7 }, { opacity: 1, scale: 1, rotateX: 0, duration: 18, ease: "power2.out" }, 702)
+        .to(connectCorridor.current, { opacity: 0, duration: 8 }, 708)
+        .fromTo(connectMessage.current, { opacity: 0, y: 38 }, { opacity: 1, y: 0, duration: 12, ease: "power2.out" }, 714)
+        .to(connectMessage.current, { opacity: .58, y: -14, duration: 8 }, 730)
+        .fromTo(gatewayHall.current, { opacity: 0, scale: .78, rotateX: 10 }, { opacity: 1, scale: 1, rotateX: 0, duration: 15, ease: "power2.out" }, 728)
+        .to(gatewayHall.current, { rotateY: -5, duration: 10, ease: "sine.inOut" }, 738)
+        .to(gatewayHall.current, { rotateY: 5, duration: 10, ease: "sine.inOut" }, 748)
+        .fromTo(contactDetails.current, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 10 }, 746)
+        .to({}, { duration: 8 }, 756)
+        .to([connectMessage.current, gatewayHall.current, contactDetails.current], { opacity: 0, scale: .88, duration: 12, ease: "power2.inOut" }, 764)
+        .to(controlRoom.current, { scale: .72, opacity: .42, duration: 14, ease: "power2.inOut" }, 764)
+        .fromTo(exitFlight.current, { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 16, ease: "power2.out" }, 772)
+        .to(exitFlight.current, { scale: .58, y: -70, opacity: .55, duration: 14, ease: "power2.inOut" }, 786)
+        .fromTo(finalDataCollapse.current, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 14 }, 790)
+        .to(exitFlight.current, { opacity: 0, duration: 9 }, 798)
+        .to(finalDataCollapse.current, { scale: .28, opacity: .22, duration: 16, ease: "power2.in" }, 802)
+        .fromTo(finalAfReveal.current, { opacity: 0, scale: .68, letterSpacing: ".42em" }, { opacity: 1, scale: 1, letterSpacing: ".18em", duration: 14, ease: "power2.out" }, 808)
+        .fromTo(finalActions.current, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 8, ease: "power2.out" }, 820);
     }, root);
 
     return () => {
@@ -539,7 +598,47 @@ export function PhaseOneFilm() {
           <div ref={projectEndCorridor} className="project-end-corridor" aria-hidden="true"><i/><i/><i/><span/><span/><span/></div>
           <div ref={projectEndFade} className="project-end-fade" aria-hidden="true"/>
         </div>
+
+        <div ref={connectFilm} className="connect-film" aria-label="Connect with Arima Finance">
+          <div ref={connectCorridor} className="connect-corridor" aria-hidden="true"><i/><i/><i/><span/></div>
+          <div ref={controlRoom} className="connect-control-room">
+            <div className="room-architecture" aria-hidden="true"><i/><i/><i/><i/><i/></div>
+            <div ref={connectMessage} className="connect-message">
+              <h2>Every meaningful journey begins with a conversation.</h2>
+              <p>Arima Finance builds financial systems through research, technology and disciplined risk management.</p>
+            </div>
+            <div ref={gatewayHall} className="gateway-hall">
+              {connectGateways.map(([title, subtitle], index) => <article className={`connect-gateway gateway-${index + 1}`} key={title}>
+                <div className="gateway-door" aria-hidden="true"><i/><i/><span/></div>
+                <strong>{title}</strong>
+                <p>{subtitle}</p>
+              </article>)}
+            </div>
+            <div ref={contactDetails} id="traditional-contact" className="connect-details">
+              {contactLinks.map(([label, value, href]) => <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener" : undefined}>
+                <small>{label}</small><span>{value}</span>
+              </a>)}
+            </div>
+          </div>
+          <div ref={exitFlight} className="exit-flight" aria-hidden="true"><div className="mini-headquarters">AF</div><div className="mini-city">{Array.from({ length: 18 }, (_, index) => <span key={index}/>)}</div></div>
+          <div ref={finalDataCollapse} className="final-data-collapse" aria-hidden="true">{marketData.map((value, index) => <span style={{ "--collapse": index } as React.CSSProperties} key={`final-${value}`}>{value}</span>)}</div>
+          <div ref={finalAfReveal} className="final-af-reveal"><strong>AF</strong><h2>ARIMA FINANCE</h2><p>Research.<br/>Technology.<br/>Risk Discipline.</p></div>
+          <div ref={finalActions} className="final-actions">
+            <button type="button" onClick={replayJourney}>Replay Journey</button>
+            <button type="button" onClick={enterWebsite}>Enter Website</button>
+          </div>
+        </div>
       </div>
     </section>
+    {websiteMode && <section id="standard-website" className="standard-website" aria-label="Arima Finance standard website">
+      <header className="standard-header"><strong>AF</strong><nav>{websiteNav.map((item) => <a href={`#standard-${item.toLowerCase().replaceAll(" ", "-")}`} key={item}>{item}</a>)}</nav></header>
+      <section id="standard-home" className="standard-hero"><small>ARIMA FINANCE</small><h1>Research, technology and risk discipline.</h1><p>A conventional overview for visitors who want to explore the company after the cinematic journey.</p></section>
+      <section id="standard-about" className="standard-section"><span>About</span><h2>Financial systems built from research.</h2><p>Arima Finance develops market intelligence, portfolio research and technology systems with a disciplined approach to risk and validation.</p></section>
+      <section id="standard-projects" className="standard-section standard-grid"><span>Projects</span><article><strong>Arima Finance Engine</strong><p>Market analysis, risk planning and trade lifecycle validation.</p></article><article><strong>AF Portfolio Lab</strong><p>Founder-funded internal portfolio research and allocation modelling.</p></article><article><strong>Quantitative Systems</strong><p>Research prototypes, trading frameworks and financial data tools.</p></article></section>
+      <section id="standard-portfolio-lab" className="standard-section"><span>Portfolio Lab</span><h2>Founder-funded internal research.</h2><p>The Portfolio Lab does not represent externally managed client assets. It is used for allocation, risk and performance research.</p></section>
+      <section id="standard-founder" className="standard-section"><span>Founder</span><h2>Aryan Heidari</h2><p>Finance, quantitative research and technology experience brought together through Arima Finance.</p></section>
+      <section id="standard-research" className="standard-section"><span>Research</span><h2>Financial research and advisory work.</h2><p>Selected work includes founder-led, collaborative and confidential assignments. Certain details are intentionally withheld.</p></section>
+      <section id="standard-contact" className="standard-section standard-contact"><span>Contact</span><h2>Start a conversation.</h2><a href="mailto:aryan.hd@outlook.com">aryan.hd@outlook.com</a><a href="https://github.com/arima7576" target="_blank" rel="noopener">github.com/arima7576</a></section>
+    </section>}
   </main>;
 }
