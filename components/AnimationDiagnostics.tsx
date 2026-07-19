@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Diagnostics = { hydrated: boolean; lenisRunning: boolean; gsapLoaded: boolean; scrollTriggerCount: number; pinSpacerCount: number; activeScene: string; timelineCreated: boolean; progress: number };
-const initial: Diagnostics = { hydrated: false, lenisRunning: false, gsapLoaded: false, scrollTriggerCount: 0, pinSpacerCount: 0, activeScene: "initialising", timelineCreated: false, progress: 0 };
+type Diagnostics = { hydrated: boolean; lenisRunning: boolean; gsapLoaded: boolean; scrollTriggerCount: number; pinSpacerCount: number; activeScene: string; timelineCreated: boolean; introTimelineProgress: number; progress: number };
+const initial: Diagnostics = { hydrated: false, lenisRunning: false, gsapLoaded: false, scrollTriggerCount: 0, pinSpacerCount: 0, activeScene: "initialising", timelineCreated: false, introTimelineProgress: 0, progress: 0 };
 
 const sceneIds = ["intro", "company", "capabilities", "founder", "research", "portfolio", "engine", "contact"];
 
@@ -57,6 +57,7 @@ export function AnimationDiagnostics() {
     "Pin spacers": status.pinSpacerCount,
     "Current scene": status.activeScene,
     "Timeline created": status.timelineCreated,
+    "Intro timeline progress": `${(status.introTimelineProgress * 100).toFixed(1)}%`,
     "Lenis running": status.lenisRunning,
     "Current scroll progress": `${(status.progress * 100).toFixed(1)}%`,
   };

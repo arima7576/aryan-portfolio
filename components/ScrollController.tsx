@@ -35,6 +35,7 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
     let probeTrigger: ReturnType<typeof ScrollTrigger.create> | null = null;
     let lenisRunning = false;
     let lastDiagnostic = 0;
+    let lastTriggerSnapshot = "";
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const mobile = window.innerWidth < 768;
     const progress = document.querySelector<HTMLElement>(".progress-rail span");
@@ -63,6 +64,18 @@ export function ScrollController({ runtimeVersion, introCompleted }: { runtimeVe
         activeScene: activeScene(),
         progress: ScrollTrigger.maxScroll(window) ? window.scrollY / ScrollTrigger.maxScroll(window) : 0,
       } }));
+      const triggerSnapshot = ScrollTrigger.getAll().map((trigger) => ({
+        id: trigger.vars.id ?? (trigger.trigger instanceof Element
+          ? trigger.trigger.id || trigger.trigger.classList[0] || trigger.trigger.tagName.toLowerCase()
+          : "window"),
+        progress: Number(trigger.progress.toFixed(2)),
+        active: trigger.isActive,
+      }));
+      const serialized = JSON.stringify(triggerSnapshot);
+      if (serialized !== lastTriggerSnapshot) {
+        console.log("[Arima Trigger Progress]", triggerSnapshot);
+        lastTriggerSnapshot = serialized;
+      }
     };
     const ticker = (time: number) => { if (lenis) lenis.raf(time * 1000); publishDiagnostics(); };
     const refresh = () => requestAnimationFrame(() => {
