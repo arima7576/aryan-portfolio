@@ -69,6 +69,7 @@ const websiteNav = ["Home", "About", "Projects", "Portfolio Lab", "Founder", "Re
 
 export function PhaseOneFilm() {
   const [websiteMode, setWebsiteMode] = useState(false);
+  const [filmDebug, setFilmDebug] = useState({ label: "arrival", progress: 0, scene: "Arrival" });
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const ambient = useRef<HTMLDivElement>(null);
@@ -176,6 +177,10 @@ export function PhaseOneFilm() {
         return;
       }
 
+      gsap.set([entrance.current, hall.current, divisionOrbit.current, founderScene.current, projectsFilm.current, connectFilm.current], { opacity: 0, visibility: "hidden", pointerEvents: "none" });
+      gsap.set([...entranceDoors.current, ...divisionPlatforms.current], { opacity: 1, visibility: "visible", pointerEvents: "none" });
+      gsap.set([coreIdentity.current, portfolioDisclosure.current, founderIdentity.current, connectMessage.current, contactDetails.current], { opacity: 0, visibility: "hidden", pointerEvents: "none" });
+
       const travel = innerWidth < 768 ? 41500 : 56440;
       const timeline = gsap.timeline({
         defaults: { ease: "none" },
@@ -188,8 +193,24 @@ export function PhaseOneFilm() {
           scrub: 1,
           anticipatePin: 1,
           invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (process.env.NODE_ENV !== "development") return;
+            const point = self.progress * 828;
+            const active = point < 58 ? ["arrival", "Arrival"] : point < 108 ? ["data-universe", "Financial data universe"] : point < 200 ? ["financial-district", "Financial district"] : point < 242 ? ["hq-entrance", "Arima HQ entrance"] : point < 292 ? ["hq-hall", "Arima HQ hall"] : point < 350 ? ["divisions", "Three divisions"] : point < 500 ? ["founder", "Founder transition"] : point < 680 ? ["projects", "Project systems"] : ["connect", "Final transition"];
+            setFilmDebug({ label: active[0], progress: self.progress, scene: active[1] });
+            const visibleText = Array.from(root.current?.querySelectorAll<HTMLElement>("[data-film-text]") ?? []).filter((node) => Number.parseFloat(getComputedStyle(node).opacity) > 0.05).map((node) => node.id || node.dataset.filmText);
+            const visiblePortals = Array.from(root.current?.querySelectorAll<HTMLElement>("[data-film-portal]") ?? []).filter((node) => Number.parseFloat(getComputedStyle(node).opacity) > 0.05).map((node) => node.id || node.dataset.filmPortal);
+            console.debug("[PhaseOneFilm]", { scene: active[1], time: timeline.time(), text: visibleText, portals: visiblePortals });
+            const scheduled = [["film-hq-entrance", 200], ["film-hq-identity", 260], ["film-division-1", 304], ["film-division-2", 307], ["film-division-3", 310], ["film-founder-identity", 372]] as const;
+            scheduled.forEach(([id, start]) => {
+              const node = root.current?.querySelector<HTMLElement>(`#${id}`);
+              if (node && timeline.time() > start + 12 && Number.parseFloat(getComputedStyle(node).opacity) === 0) console.warn("[PhaseOneFilm] entrance passed while hidden", { id, start, time: timeline.time() });
+            });
+          },
         },
       });
+
+      [["arrival", 0], ["data-universe", 58], ["financial-district", 108], ["hq-entrance", 200], ["hq-hall", 242], ["divisions", 292], ["founder", 350], ["projects", 500], ["connect", 680]].forEach(([label, position]) => timeline.addLabel(label as string, position as number));
 
       timeline
         .set(stage.current, { backgroundColor: "#000" }, 0)
@@ -276,54 +297,57 @@ export function PhaseOneFilm() {
         .fromTo(headquarters.current, { opacity: 0 }, { opacity: 1, duration: 8 }, 200)
         .to(destination.current, { scale: 3.4, y: 80, opacity: 0, filter: "blur(10px)", duration: 18, ease: "power2.in" }, 200)
         .to(avenueWorld.current, { scale: 2.55, y: -130, opacity: .18, duration: 18, ease: "power2.in" }, 200)
-        .fromTo(entrance.current, { opacity: 0, scale: .35, z: -500 }, { opacity: 1, scale: 1, z: 0, duration: 18, ease: "power2.inOut" }, 200)
+        .fromTo(entrance.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", scale: .35, z: -500 }, { opacity: 1, visibility: "visible", pointerEvents: "auto", scale: 1, z: 0, duration: 18, ease: "power2.inOut" }, 200)
         .to(entrance.current, { filter: "brightness(1.5)", duration: 8 }, 212)
         .to(entranceDoors.current[0], { xPercent: -110, duration: 9, ease: "power2.inOut" }, 216)
         .to(entranceDoors.current[1], { xPercent: 110, duration: 9, ease: "power2.inOut" }, 216)
-        .to(entrance.current, { scale: 5.4, opacity: 0, duration: 12, ease: "power3.in" }, 224)
-        .fromTo(hall.current, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 12, ease: "power2.out" }, 226)
-        .fromTo(hallRing.current, { rotateX: 68, rotateZ: -18, scale: .65 }, { rotateX: 58, rotateZ: 0, scale: 1, duration: 18 }, 228)
-        .fromTo(coreStreams.current, { opacity: 0, scaleX: .15 }, { opacity: .78, scaleX: 1, duration: 15, stagger: .6 }, 230)
+        .to(entrance.current, { scale: 5.4, opacity: 0, duration: 14, ease: "power3.in" }, 224)
+        .set(entrance.current, { opacity: 0, visibility: "hidden", pointerEvents: "none" }, 242)
+        .fromTo(hall.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", scale: 1.45 }, { opacity: 1, visibility: "visible", pointerEvents: "auto", scale: 1, duration: 12, ease: "power2.out" }, 242)
+        .fromTo(hallRing.current, { rotateX: 68, rotateZ: -18, scale: .65 }, { rotateX: 58, rotateZ: 0, scale: 1, duration: 18 }, 244)
+        .fromTo(coreStreams.current, { opacity: 0, scaleX: .15 }, { opacity: .78, scaleX: 1, duration: 15, stagger: .6 }, 246)
 
-        .fromTo(intelligenceCore.current, { opacity: 0, scale: .18 }, { opacity: 1, scale: 1, duration: 16, ease: "power2.out" }, 230)
-        .fromTo(coreShells.current, { rotate: -55, scale: .45, opacity: 0 }, { rotate: 0, scale: 1, opacity: 1, duration: 18, stagger: 1.2 }, 232)
+        .fromTo(intelligenceCore.current, { opacity: 0, scale: .18 }, { opacity: 1, scale: 1, duration: 16, ease: "power2.out" }, 246)
+        .fromTo(coreShells.current, { rotate: -55, scale: .45, opacity: 0 }, { rotate: 0, scale: 1, opacity: 1, duration: 18, stagger: 1.2 }, 248)
         .to(coreShells.current[0], { x: -150, rotateY: -62, duration: 12, ease: "power2.inOut" }, 246)
         .to(coreShells.current[1], { x: 150, rotateY: 62, duration: 12, ease: "power2.inOut" }, 246)
-        .fromTo(coreIdentity.current, { opacity: 0, scale: .7, letterSpacing: ".5em" }, { opacity: 1, scale: 1, letterSpacing: ".16em", duration: 12, ease: "power2.out" }, 246)
+        .fromTo(coreIdentity.current, { opacity: 0, scale: .7, letterSpacing: ".5em" }, { opacity: 1, scale: 1, letterSpacing: ".16em", duration: 12, ease: "power2.out" }, 260)
         .to(hall.current, { rotateY: -13, rotateX: 2, duration: 18, ease: "sine.inOut" }, 250)
         .to(hall.current, { rotateY: 12, rotateX: -2, duration: 18, ease: "sine.inOut" }, 268)
 
-        .to([intelligenceCore.current, coreIdentity.current], { scale: .42, opacity: .32, duration: 12, ease: "power2.inOut" }, 270)
-        .fromTo(divisionOrbit.current, { opacity: 0, scale: .5, rotateY: -26 }, { opacity: 1, scale: 1, rotateY: 0, duration: 14, ease: "power2.out" }, 272)
-        .fromTo(divisionPlatforms.current, { opacity: 0, y: 160, rotateX: 18 }, { opacity: 1, y: 0, rotateX: 0, duration: 14, stagger: 3, ease: "power2.out" }, 274)
-        .to(divisionOrbit.current, { rotateY: -4, rotateX: 1, duration: 17, ease: "sine.inOut" }, 284)
-        .to(divisionOrbit.current, { rotateY: 4, rotateX: -1, duration: 17, ease: "sine.inOut" }, 301)
-        .to(divisionPlatforms.current[0], { opacity: .28, scale: .88, duration: 8 }, 292)
-        .to(divisionPlatforms.current[1], { opacity: .32, scale: .9, duration: 8 }, 302)
-        .to(divisionPlatforms.current[2], { scale: 1.04, duration: 10 }, 302)
-        .fromTo(portfolioDisclosure.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 8 }, 308)
-        .to({}, { duration: 8 }, 316)
+        .to([intelligenceCore.current, coreIdentity.current], { scale: .42, opacity: .32, duration: 12, ease: "power2.inOut" }, 292)
+        .set(hall.current, { opacity: 0, visibility: "hidden", pointerEvents: "none" }, 300)
+        .fromTo(divisionOrbit.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", scale: .5, rotateY: -26 }, { opacity: 1, visibility: "visible", pointerEvents: "auto", scale: 1, rotateY: 0, duration: 14, ease: "power2.out" }, 300)
+        .fromTo(divisionPlatforms.current, { opacity: 0, y: 160, rotateX: 18 }, { opacity: 1, y: 0, rotateX: 0, duration: 14, stagger: 3, ease: "power2.out" }, 304)
+        .to(divisionOrbit.current, { rotateY: -4, rotateX: 1, duration: 17, ease: "sine.inOut" }, 318)
+        .to(divisionOrbit.current, { rotateY: 4, rotateX: -1, duration: 17, ease: "sine.inOut" }, 335)
+        .to(divisionPlatforms.current[0], { opacity: .28, scale: .88, duration: 8 }, 326)
+        .to(divisionPlatforms.current[1], { opacity: .32, scale: .9, duration: 8 }, 334)
+        .to(divisionPlatforms.current[2], { scale: 1.04, duration: 10 }, 334)
+        .fromTo(portfolioDisclosure.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 8 }, 340)
+        .to({}, { duration: 8 }, 348)
 
-        .to(portfolioDisclosure.current, { opacity: 0, y: 14, duration: 5 }, 324)
-        .to(divisionPlatforms.current, { x: 0, y: 0, scale: .08, rotateY: 0, opacity: 0, duration: 12, stagger: .7, ease: "power2.in" }, 324)
-        .to([hallRing.current, coreStreams.current], { opacity: 0, scale: .7, duration: 10 }, 326)
-        .to(hall.current, { rotateY: 0, rotateX: 0, duration: 7 }, 326)
-        .to([intelligenceCore.current, coreIdentity.current], { scale: .18, opacity: 0, duration: 10, ease: "power2.in" }, 328)
-        .to(headquarters.current, { backgroundColor: "#000", duration: 13 }, 327)
-        .fromTo(transitionBeam.current, { opacity: 0, scaleY: .02, scaleX: .3 }, { opacity: 1, scaleY: 1, scaleX: 1, duration: 8, ease: "power2.out" }, 330)
-        .to(transitionBeam.current, { scale: 7, opacity: .92, duration: 6, ease: "power3.in" }, 338)
-        .fromTo(transitionDarkness.current, { opacity: 0 }, { opacity: 1, duration: 8, ease: "power2.inOut" }, 340)
-        .to(transitionBeam.current, { opacity: 0, duration: 6 }, 342)
+        .to(portfolioDisclosure.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", y: 14, duration: 5 }, 356)
+        .to(divisionPlatforms.current, { x: 0, y: 0, scale: .08, rotateY: 0, opacity: 0, visibility: "hidden", pointerEvents: "none", duration: 12, stagger: .7, ease: "power2.in" }, 356)
+        .to([hallRing.current, coreStreams.current], { opacity: 0, visibility: "hidden", scale: .7, duration: 10 }, 358)
+        .to(hall.current, { rotateY: 0, rotateX: 0, duration: 7 }, 358)
+        .set(divisionOrbit.current, { opacity: 0, visibility: "hidden", pointerEvents: "none" }, 360)
+        .to([intelligenceCore.current, coreIdentity.current], { scale: .18, opacity: 0, visibility: "hidden", pointerEvents: "none", duration: 10, ease: "power2.in" }, 360)
+        .to(headquarters.current, { backgroundColor: "#000", duration: 13 }, 360)
+        .fromTo(transitionBeam.current, { opacity: 0, scaleY: .02, scaleX: .3 }, { opacity: 1, scaleY: 1, scaleX: 1, duration: 8, ease: "power2.out" }, 362)
+        .to(transitionBeam.current, { scale: 7, opacity: .92, duration: 6, ease: "power3.in" }, 370)
+        .fromTo(transitionDarkness.current, { opacity: 0 }, { opacity: 1, duration: 8, ease: "power2.inOut" }, 372)
+        .to(transitionBeam.current, { opacity: 0, duration: 6 }, 378)
 
-        .fromTo(founderScene.current, { opacity: 0 }, { opacity: 1, duration: 7 }, 350)
-        .fromTo(founderBeam.current, { opacity: 0, scaleY: .05 }, { opacity: 1, scaleY: 1, duration: 12, ease: "power2.out" }, 350)
-        .fromTo(founderFigure.current, { opacity: 0, scale: .65, rotateY: -24 }, { opacity: 1, scale: 1, rotateY: 0, duration: 20, ease: "power2.out" }, 355)
-        .fromTo(founderFigurePaths.current, { strokeDashoffset: 1000 }, { strokeDashoffset: 0, duration: 22, stagger: 1.1, ease: "power2.out" }, 354)
+        .fromTo(founderScene.current, { opacity: 0, visibility: "hidden", pointerEvents: "none" }, { opacity: 1, visibility: "visible", pointerEvents: "auto", duration: 7 }, 380)
+        .fromTo(founderBeam.current, { opacity: 0, scaleY: .05 }, { opacity: 1, scaleY: 1, duration: 12, ease: "power2.out" }, 380)
+        .fromTo(founderFigure.current, { opacity: 0, scale: .65, rotateY: -24 }, { opacity: 1, scale: 1, rotateY: 0, duration: 20, ease: "power2.out" }, 385)
+        .fromTo(founderFigurePaths.current, { strokeDashoffset: 1000 }, { strokeDashoffset: 0, duration: 22, stagger: 1.1, ease: "power2.out" }, 384)
         .to(founderBeam.current, { opacity: .18, scaleX: 2.4, duration: 12 }, 363)
         .to(founderFigure.current, { rotateY: 20, rotateX: -2, duration: 16, ease: "sine.inOut" }, 368)
-        .fromTo(founderIdentity.current, { opacity: 0, x: 70 }, { opacity: 1, x: 0, duration: 12, ease: "power2.out" }, 372)
+        .fromTo(founderIdentity.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", x: 70 }, { opacity: 1, visibility: "visible", pointerEvents: "auto", x: 0, duration: 12, ease: "power2.out" }, 402)
         .to({}, { duration: 8 }, 380)
-        .to(founderIdentity.current, { opacity: 0, x: -40, duration: 7 }, 388)
+        .to(founderIdentity.current, { opacity: 0, visibility: "hidden", pointerEvents: "none", x: -40, duration: 7 }, 418)
 
         .fromTo(founderStageNodes.current[0], { opacity: 0, x: -90 }, { opacity: 1, x: 0, duration: 10 }, 390)
         .to(founderFigure.current, { rotateY: -10, x: 110, duration: 14 }, 390)
@@ -486,7 +510,7 @@ export function PhaseOneFilm() {
                     </article>)}
                   </div>)}
                 </div>
-                <div ref={destination} className="arima-destination"><span>AF</span><strong>ARIMA FINANCE</strong></div>
+                <div ref={destination} id="film-destination" data-film-text="destination" className="arima-destination"><span>AF</span><strong>ARIMA FINANCE</strong></div>
               </div>
             </div>
           </div>
@@ -494,10 +518,10 @@ export function PhaseOneFilm() {
         </div>
 
         <div ref={headquarters} className="af-headquarters" aria-label="Arima Finance intelligence headquarters">
-          <div ref={entrance} className="af-entrance">
+          <div ref={entrance} id="film-hq-entrance" data-film-portal="hq-entrance" className="af-entrance">
             <div className="entrance-emblem"><span>AF</span><small>ARIMA FINANCE</small></div>
-            <div ref={(node) => { if (node) entranceDoors.current[0] = node; }} className="entrance-door door-left"/>
-            <div ref={(node) => { if (node) entranceDoors.current[1] = node; }} className="entrance-door door-right"/>
+            <div id="film-hq-door-left" data-film-portal="hq-door-left" ref={(node) => { if (node) entranceDoors.current[0] = node; }} className="entrance-door door-left"/>
+            <div id="film-hq-door-right" data-film-portal="hq-door-right" ref={(node) => { if (node) entranceDoors.current[1] = node; }} className="entrance-door door-right"/>
             <div className="entrance-floor"><i/><i/><i/></div>
           </div>
 
@@ -511,13 +535,13 @@ export function PhaseOneFilm() {
               <span ref={(node) => { if (node) coreShells.current[1] = node; }} className="core-shell shell-b"/>
               <i className="core-light"/>
             </div>
-            <div ref={coreIdentity} className="core-identity">
+            <div ref={coreIdentity} id="film-hq-identity" data-film-text="hq-identity" className="core-identity">
               <span>AF</span><strong>ARIMA FINANCE</strong><small>Financial Intelligence</small>
               <div><b>Research</b><b>Portfolio Solutions</b></div>
             </div>
 
-            <div ref={divisionOrbit} className="division-orbit">
-              {divisionDetails.map((division, divisionIndex) => <article ref={(node) => { if (node) divisionPlatforms.current[divisionIndex] = node; }} className={`division-platform division-${divisionIndex + 1}`} key={division.title}>
+            <div ref={divisionOrbit} id="film-divisions" data-film-portal="divisions" className="division-orbit">
+              {divisionDetails.map((division, divisionIndex) => <article id={`film-division-${divisionIndex + 1}`} data-film-portal={`division-${divisionIndex + 1}`} ref={(node) => { if (node) divisionPlatforms.current[divisionIndex] = node; }} className={`division-platform division-${divisionIndex + 1}`} key={division.title}>
                 <div className="platform-surface"><span>{division.index}</span><small>{division.lead}</small><h2>{division.title}</h2>
                   {divisionIndex === 1 && <strong className="engine-emphasis">ARIMA FINANCE ENGINE</strong>}
                   {divisionIndex === 2 && <p>A live-funded research environment using the founder&apos;s own capital to study structured allocation and risk management.</p>}
@@ -527,7 +551,7 @@ export function PhaseOneFilm() {
               </article>)}
             </div>
 
-            <div ref={portfolioDisclosure} className="model-disclosure"><strong>Model Portfolio Disclosure</strong><span>The investor profiles presented are internal research models. The underlying capital belongs to the founder. Arima Finance does not currently manage external client assets through these profiles. Information is presented for research, demonstration and technology-development purposes only.</span></div>
+            <div ref={portfolioDisclosure} id="film-portfolio-disclosure" data-film-text="portfolio-disclosure" className="model-disclosure"><strong>Model Portfolio Disclosure</strong><span>The investor profiles presented are internal research models. The underlying capital belongs to the founder. Arima Finance does not currently manage external client assets through these profiles. Information is presented for research, demonstration and technology-development purposes only.</span></div>
           </div>
           <div ref={transitionBeam} className="founder-transition-beam" aria-hidden="true"/>
           <div ref={transitionDarkness} className="phase-three-darkness" aria-hidden="true"/>
@@ -547,7 +571,7 @@ export function PhaseOneFilm() {
             <div className="figure-points">{Array.from({ length: 22 }, (_, index) => <i style={{ "--point": index } as React.CSSProperties} key={index}/>)}</div>
           </div>
 
-          <div ref={founderIdentity} className="founder-identity"><small>THE FOUNDER</small><h2>ARYAN HEIDARI</h2><strong>Founder of Arima Finance</strong><span>Finance · Quantitative Research · Technology</span></div>
+          <div ref={founderIdentity} id="film-founder-identity" data-film-text="founder-identity" className="founder-identity"><small>THE FOUNDER</small><h2>ARYAN HEIDARI</h2><strong>Founder of Arima Finance</strong><span>Finance · Quantitative Research · Technology</span></div>
 
           <div className="founder-story">
             {founderStages.map((stageData, index) => <article ref={(node) => { if (node) founderStageNodes.current[index] = node; }} className={`founder-stage founder-stage-${index + 1}`} key={stageData[0]}><small>0{index + 1}</small><h3>{stageData[0]}</h3><div>{stageData.slice(1).map((line) => <span key={line}>{line}</span>)}</div>
@@ -630,6 +654,7 @@ export function PhaseOneFilm() {
         </div>
       </div>
     </section>
+    {process.env.NODE_ENV === "development" && <output className="film-debug" aria-live="polite">{filmDebug.label} · {filmDebug.scene} · {Math.round(filmDebug.progress * 100)}%</output>}
     {websiteMode && <section id="standard-website" className="standard-website" aria-label="Arima Finance standard website">
       <header className="standard-header"><strong>AF</strong><nav>{websiteNav.map((item) => <a href={`#standard-${item.toLowerCase().replaceAll(" ", "-")}`} key={item}>{item}</a>)}</nav></header>
       <section id="standard-home" className="standard-hero"><small>ARIMA FINANCE</small><h1>Research, technology and risk discipline.</h1><p>A conventional overview for visitors who want to explore the company after the cinematic journey.</p></section>
