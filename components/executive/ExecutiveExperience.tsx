@@ -1,136 +1,332 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ExecutiveBriefingPanel } from './ExecutiveBriefingPanel';
+import { ArimaAvatar } from '@/components/avatar/ArimaAvatar';
+import { ChamberRenderer } from '@/components/chambers/ChamberRenderer';
+import {
+  DetailPortal,
+  IntelligenceObjectLayer,
+} from '@/components/intelligence-objects';
+import { ConsciousnessOcean } from '@/components/neural/ConsciousnessOcean';
+import { NeuralCore } from '@/components/neural/NeuralCore';
+import styles from '@/components/neural/NeuralExperience.module.css';
+import { ChamberTransition } from '@/components/transitions/ChamberTransition';
+import { useNeuralExperience } from '@/hooks/useNeuralExperience';
 import { useVoiceController } from '@/hooks/useVoiceController';
 import { useAuth } from '@/providers';
-import type { VoicePanelAction } from '@/types/voice';
+import { defaultIntelligencePresentationPolicy } from '@/utils/intelligence-policy';
 
 const statusCopy = {
-  idle: 'Ready when you are',
+  voice_ready: 'Voice ready',
   requesting_microphone: 'Requesting microphone',
-  listening: 'Listening',
-  speech_detected: 'I can hear you',
-  processing: 'Processing',
-  thinking: 'Thinking',
-  tool_execution: 'Executing securely',
-  awaiting_approval: 'Awaiting your approval',
-  speaking: 'Speaking',
-  interrupted: 'Interrupted',
-  completed: 'Complete',
-  error: 'Voice needs attention',
-  cancelled: 'Session cancelled',
+  microphone_blocked: 'Microphone blocked',
+  recognition_unavailable: 'Recognition service unavailable',
+  browser_unsupported: 'Browser voice unsupported',
+  keyboard_mode: 'Keyboard mode active',
+  retrying: 'Retrying voice',
+  listening_restored: 'Listening restored',
+  speech_playback_interrupted: 'Speech stopped',
+  idle: 'Arima is ready',
 };
+
+type ArrivalPhase = 'seed' | 'spiral' | 'ocean' | 'ready';
 
 export function ExecutiveExperience() {
   const { user } = useAuth();
+  const experienceRootRef = useRef<HTMLElement | null>(null);
+  const experience = useNeuralExperience();
+  const {
+    mode,
+    activeChamber,
+    transition,
+    avatarState,
+    animation,
+    objects,
+    selectedObject,
+    announcement,
+    enterCore,
+    exitCore,
+    openChamber,
+    handleVoiceState,
+    handleVoiceResponse: consumeVoiceResponse,
+    handleVoiceNavigation: routeVoiceNavigation,
+    showDailyIntelligence,
+    showWeeklyPerformance,
+    selectObject,
+    dismissObject,
+    resolveObjectAction,
+    reducedMotionOverride,
+    setReducedMotionOverride,
+  } = experience;
   const [clock, setClock] = useState('');
-  const [panel, setPanel] = useState<VoicePanelAction | null>(null);
   const [keyboardValue, setKeyboardValue] = useState('');
   const [highContrast, setHighContrast] = useState(false);
-  const voice = useVoiceController({ onPanel: setPanel });
+  const [arrival, setArrival] = useState<ArrivalPhase>('seed');
+  const presentationStarted = useRef(false);
+  const arrivalStarted = useRef(false);
+
+  const handleVoiceResponse = useCallback((response: Parameters<typeof consumeVoiceResponse>[0]) => {
+    consumeVoiceResponse(response);
+  }, [consumeVoiceResponse]);
+
+  const handleVoiceNavigation = useCallback((
+    action: Parameters<typeof routeVoiceNavigation>[0],
+  ) => routeVoiceNavigation(action), [routeVoiceNavigation]);
+
+  const voice = useVoiceController({
+    onVoiceResponse: handleVoiceResponse,
+    onNavigation: handleVoiceNavigation,
+    onStateChange: handleVoiceState,
+  });
 
   useEffect(() => {
-    const update = () => setClock(new Intl.DateTimeFormat('en-GB', {
+    const updateClock = () => setClock(new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
     }).format(new Date()));
-    update();
-    const interval = window.setInterval(update, 1_000);
+    updateClock();
+    const interval = window.setInterval(updateClock, 1_000);
     return () => window.clearInterval(interval);
   }, []);
 
-  const submit = (event: FormEvent) => {
+  useEffect(() => {
+    if (animation.reducedMotion) {
+      const settle = window.setTimeout(() => setArrival('ready'), 0);
+      return () => window.clearTimeout(settle);
+    }
+    if (arrivalStarted.current) return undefined;
+    arrivalStarted.current = true;
+    const spiral = window.setTimeout(() => setArrival('spiral'), 260);
+    const ocean = window.setTimeout(() => setArrival('ocean'), 880);
+    const ready = window.setTimeout(() => setArrival('ready'), 1_520);
+    return () => {
+      window.clearTimeout(spiral);
+      window.clearTimeout(ocean);
+      window.clearTimeout(ready);
+    };
+  }, [animation.reducedMotion]);
+
+  useEffect(() => {
+    const root = experienceRootRef.current;
+    if (!root || animation.reducedMotion || animation.mobile) return undefined;
+    let frame = 0;
+    let nextX = 0;
+    let nextY = 0;
+    const applyParallax = () => {
+      frame = 0;
+      root.style.setProperty('--parallax-x', (nextX * 7).toFixed(2) + 'px');
+      root.style.setProperty('--parallax-y', (nextY * 5).toFixed(2) + 'px');
+      root.style.setProperty('--parallax-fog-x', (nextX * -2).toFixed(2) + 'px');
+      root.style.setProperty('--parallax-fog-y', (nextY * -1.5).toFixed(2) + 'px');
+    };
+    const onMove = (event: PointerEvent) => {
+      nextX = event.clientX / window.innerWidth - 0.5;
+      nextY = event.clientY / window.innerHeight - 0.5;
+      if (!frame) frame = window.requestAnimationFrame(applyParallax);
+    };
+    const reset = () => {
+      nextX = 0;
+      nextY = 0;
+      if (!frame) frame = window.requestAnimationFrame(applyParallax);
+    };
+    root.addEventListener('pointermove', onMove, { passive: true });
+    root.addEventListener('pointerleave', reset);
+    return () => {
+      root.removeEventListener('pointermove', onMove);
+      root.removeEventListener('pointerleave', reset);
+      window.cancelAnimationFrame(frame);
+      root.style.removeProperty('--parallax-x');
+      root.style.removeProperty('--parallax-y');
+      root.style.removeProperty('--parallax-fog-x');
+      root.style.removeProperty('--parallax-fog-y');
+    };
+  }, [animation.mobile, animation.reducedMotion]);
+
+  useEffect(() => {
+    if (mode !== 'chamber' || activeChamber !== 'executive') return;
+    if (presentationStarted.current) return;
+    presentationStarted.current = true;
+    if (defaultIntelligencePresentationPolicy(new Date()) === 'weekly') {
+      showWeeklyPerformance();
+      openChamber('portfolio');
+    } else {
+      showDailyIntelligence();
+    }
+  }, [
+    activeChamber,
+    mode,
+    openChamber,
+    showDailyIntelligence,
+    showWeeklyPerformance,
+  ]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (selectedObject) {
+        selectObject(null);
+        return;
+      }
+      exitCore();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [exitCore, selectObject, selectedObject]);
+
+  const submitKeyboard = (event: FormEvent) => {
     event.preventDefault();
     void voice.submitTranscript(keyboardValue);
     setKeyboardValue('');
   };
 
+  const coreActive = mode !== 'avatar';
+  const voiceState = voice.state === 'warning' ? 'warning' : voice.state;
+  const voiceMessage = voice.error
+    ?? voice.partialTranscript
+    ?? (voice.captions ? voice.response : '')
+    ?? '';
+
   return (
-    <main className={`executive-world state-${voice.state}${highContrast ? ' high-contrast' : ''}`}>
-      <div className="executive-atmosphere" aria-hidden="true"><i /><i /><i /></div>
-      <header className="executive-header">
-        <Link href="/" className="executive-brand"><b>AF</b><span>ARIMA<br />EXECUTIVE OS</span></Link>
-        <div className="executive-mode">
-          {voice.mode === 'demo' && <strong>DEMO MODE</strong>}
+    <main
+      ref={experienceRootRef}
+      className={styles.experience}
+      data-mode={mode}
+      data-high-contrast={highContrast}
+      data-paused={animation.paused}
+      aria-label="Arima Living Intelligence Environment"
+    >
+      <ConsciousnessOcean
+        policy={animation}
+        mode={mode}
+        avatarState={avatarState}
+        amplitude={voice.speechAmplitude}
+        transitionPhase={transition.phase}
+        arrival={arrival}
+      />
+      <div className={styles.worldGrid} aria-hidden="true" />
+      <div className={styles.worldVignette} aria-hidden="true" />
+      <header className={styles.experienceHeader}>
+        <Link href="/" className={styles.brand} aria-label="Return to Arima home">
+          <b className={styles.brandMark}>AF</b>
+          <span className={styles.brandCopy}><b>ARIMA</b>EXECUTIVE OS</span>
+        </Link>
+        <div className={styles.headerMode}>
+          <strong className={voice.mode === 'demo' ? styles.demoBadge : styles.liveBadge}>
+            {voice.mode === 'demo' ? 'DEMO MODE' : 'LIVE MODE'}
+          </strong>
           <span>{clock}</span>
-          <span>EXECUTIVE</span>
+          <span>{mode.replaceAll('_', ' ')}</span>
         </div>
-        <div className="executive-user"><i />PRIVATE / {user?.name ?? 'AUTHORISED USER'}</div>
+        <div className={styles.userLock}><i />PRIVATE / {user?.name ?? 'AUTHORISED USER'}</div>
       </header>
 
-      <section className="executive-stage" aria-label="Arima voice interface">
-        <div className="executive-orbits" aria-hidden="true"><i /><i /><i /><i /></div>
+      <div
+        className={styles.cameraWorld}
+        data-mode={mode}
+        data-arrival={arrival}
+        data-avatar-state={avatarState}
+      >
+        {!coreActive && (
+          <ArimaAvatar
+            state={avatarState}
+            amplitude={voice.speechAmplitude}
+            arrival={arrival}
+            onActivate={enterCore}
+            onInterrupt={() => void voice.interrupt()}
+          />
+        )}
+
+        <NeuralCore
+          activeChamber={activeChamber}
+          policy={animation}
+          active={coreActive}
+          onNavigate={openChamber}
+        />
+
+        {mode === 'neural_core' && (
+          <section className={styles.coreInterstitial} aria-live="polite">
+            <span>NEURAL CORE / CONNECTED INTELLIGENCE</span>
+            <strong>Choose a pathway or ask Arima.</strong>
+            <p>Executive, portfolio, research, growth, projects, publications, approvals and system health are connected here.</p>
+          </section>
+        )}
+
+        {mode === 'chamber' && (
+          <>
+            <ChamberRenderer
+              chamber={activeChamber}
+              policy={animation}
+              onReturnToCore={exitCore}
+            />
+            <IntelligenceObjectLayer
+              activeChamber={activeChamber}
+              objects={objects}
+              onFocus={(object) => selectObject(object.id)}
+              onDismiss={dismissObject}
+            />
+          </>
+        )}
+      </div>
+
+      <ChamberTransition transition={transition} />
+
+      <div className={styles.voiceBar} data-state={voiceState} role="status" aria-live="polite">
+        <i aria-hidden="true" />
+        <span>{statusCopy[voice.voiceStatus]}</span>
+        {voiceMessage && <p>{voiceMessage}</p>}
         <button
           type="button"
-          className="arima-core"
           onClick={() => (
             voice.state === 'speaking'
               ? void voice.interrupt()
               : void voice.startListening()
           )}
-          aria-label={voice.state === 'speaking' ? 'Interrupt Arima' : 'Start speaking to Arima'}
         >
-          <span className="core-halo" />
-          <span className="core-grid" />
-          <span className="core-signal">{Array.from({ length: 24 }, (_, index) => <i style={{ '--bar': index } as React.CSSProperties} key={index} />)}</span>
-          <strong>AF</strong>
+          {voice.state === 'speaking' ? 'Interrupt' : 'Speak'}
         </button>
-        <div className="executive-status" role="status" aria-live="polite">
-          <span>{statusCopy[voice.state]}</span>
-          {voice.partialTranscript && <p>{voice.partialTranscript}</p>}
-          {voice.captions && voice.response && <p>{voice.response}</p>}
-          {voice.error && <em>{voice.error}</em>}
-          {!voice.speechSupported && <em>Speech recognition unavailable · keyboard ready</em>}
-        </div>
-      </section>
+        {voice.voiceStatus === 'recognition_unavailable' && (
+          <button type="button" onClick={() => void voice.retryListening()}>Retry</button>
+        )}
+      </div>
 
-      <nav className="executive-dock" aria-label="Executive modules">
-        <Link className="active" href="/executive">Executive</Link>
-        <Link href="/portfolio-lab">Portfolio</Link>
-        <Link href="/quant-research">Quant Research</Link>
-        <Link href="/growth-studio">Growth Studio</Link>
-        <Link href="/projects">Projects</Link>
-      </nav>
-
-      <div className="executive-controls">
+      <div className={styles.experienceControls} aria-label="Experience controls">
         <button type="button" onClick={() => voice.setKeyboardOpen(!voice.keyboardOpen)} aria-expanded={voice.keyboardOpen}>Keyboard</button>
-        <button type="button" onClick={() => voice.setMuted(!voice.muted)} aria-pressed={voice.muted}>{voice.muted ? 'Unmute' : 'Mute voice'}</button>
+        <button type="button" onClick={() => voice.setMuted(!voice.muted)} aria-pressed={voice.muted}>{voice.muted ? 'Unmute' : 'Mute'}</button>
         <button type="button" onClick={() => voice.setCaptions(!voice.captions)} aria-pressed={voice.captions}>Captions</button>
+        <button type="button" onClick={() => setReducedMotionOverride(!reducedMotionOverride)} aria-pressed={reducedMotionOverride}>Simplify</button>
         <button type="button" onClick={() => setHighContrast((value) => !value)} aria-pressed={highContrast}>Contrast</button>
         <button type="button" onClick={voice.repeat} disabled={!voice.response}>Repeat</button>
-        <button type="button" onClick={() => void voice.cancel()}>Cancel</button>
+        <button type="button" onClick={exitCore} disabled={mode === 'avatar'}>Exit</button>
       </div>
 
       {voice.keyboardOpen && (
-        <form className="executive-keyboard" onSubmit={submit}>
-          <label htmlFor="voice-fallback">Keyboard fallback</label>
+        <form className={styles.keyboardFallback} onSubmit={submitKeyboard}>
+          <label htmlFor="neural-keyboard">Keyboard fallback / no audio is sent or stored</label>
           <input
-            id="voice-fallback"
+            id="neural-keyboard"
             value={keyboardValue}
             onChange={(event) => setKeyboardValue(event.target.value)}
-            placeholder="Ask Arima…"
+            placeholder="Ask Arima: What’s up today?"
             autoFocus
           />
           <button type="submit">Send</button>
         </form>
       )}
 
-      <button
-        type="button"
-        className={`approval-indicator${voice.state === 'awaiting_approval' ? ' is-active' : ''}`}
-        onClick={() => setPanel({ panel: 'executive_briefing', focus: 'approvals' })}
-      >
-        <i /> 2 approvals
-      </button>
-      <p className="executive-disclosure">
-        {voice.mode === 'demo'
-          ? 'Local deterministic demonstration · no live operational data'
-          : 'Connected to Arima Executive OS'}
-      </p>
-      <ExecutiveBriefingPanel action={panel} onClose={() => setPanel(null)} />
+      {announcement && (
+        <p className={styles.announcement} aria-live={announcement.politeness ?? 'polite'}>
+          {announcement.message}
+        </p>
+      )}
+
+      <DetailPortal
+        object={selectedObject}
+        activeChamber={activeChamber}
+        onClose={() => selectObject(null)}
+        onAction={resolveObjectAction}
+      />
     </main>
   );
 }

@@ -1,103 +1,216 @@
-// ─── Arima Universe — Authentication Provider ───
-// 🔐 Manages auth state, no backend connected — placeholder architecture only.
-
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { AuthState, AuthStep, User } from '@/types';
+import {
+  authApi,
+  AuthApiError,
+  clearAuthSession,
+  type RegistrationResult,
+} from '@/lib/auth-api';
 
 type AuthContextValue = AuthState & {
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  forgotPassword: (email: string) => Promise<void>;
-  verifyEmail: (code: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe: boolean) => Promise<User | null>;
+  register: (name: string, email: string, password: string) => Promise<RegistrationResult | null>;
+  logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, password: string) => Promise<boolean>;
+  verifyEmail: (token: string) => Promise<boolean>;
+  resendVerificationEmail: (email: string) => Promise<boolean>;
   resetStep: () => void;
 };
 
 const INITIAL_AUTH_STATE: AuthState = {
+  isInitialized: false,
   isAuthenticated: false,
   user: null,
-  step: 'idle',
+  step: 'initializing',
   error: null,
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const errorMessage = (error: unknown, fallback: string) => (
+  error instanceof AuthApiError ? error.message : fallback
+);
+
+const splitName = (name: string) => {
+  const [firstName = '', ...lastName] = name.trim().split(/\s+/);
+  return { firstName, lastName: lastName.join(' ') };
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(INITIAL_AUTH_STATE);
 
   const setStep = useCallback((step: AuthStep) => {
-    setState((prev) => ({ ...prev, step, error: step === 'loading' ? null : prev.error }));
+    setState((previous) => ({
+      ...previous,
+      step,
+      error: step === 'loading' ? null : previous.error,
+    }));
   }, []);
 
   const setError = useCallback((error: string) => {
-    setState((prev) => ({ ...prev, step: 'error', error }));
+    setState((previous) => ({
+      ...previous,
+      isInitialized: true,
+      step: 'error',
+      error,
+    }));
   }, []);
 
-  const login = useCallback(async (_email: string, _password: string) => {
+  useEffect(() => {
+    let active = true;
+
+    const bootstrap = async () => {
+      try {
+        const session = await authApi.refresh();
+        const user = session.user ?? await authApi.me();
+        if (!active) return;
+        setState({
+          isInitialized: true,
+          isAuthenticated: user.emailVerified,
+          user: user.emailVerified ? user : null,
+          step: 'idle',
+          error: user.emailVerified ? null : 'Please verify your email before signing in.',
+        });
+        if (!user.emailVerified) clearAuthSession();
+      } catch {
+        clearAuthSession();
+        if (!active) return;
+        setState({
+          ...INITIAL_AUTH_STATE,
+          isInitialized: true,
+          step: 'idle',
+        });
+      }
+    };
+
+    void bootstrap();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean): Promise<User | null> => {
     setStep('loading');
     try {
-      // TODO: Connect to authentication API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Placeholder: simulate login
-      const mockUser: User = {
-        id: 'usr_placeholder',
-        email: _email,
-        name: _email.split('@')[0],
-        createdAt: new Date().toISOString(),
-      };
-      setState({ isAuthenticated: true, user: mockUser, step: 'success', error: null });
-    } catch {
-      setError('Authentication failed. Please try again.');
+      const session = await authApi.login({ email, password, rememberMe });
+      const user = session.user ?? await authApi.me();
+      if (!user.emailVerified) {
+        clearAuthSession();
+        setError('Please verify your email before signing in.');
+        return null;
+      }
+      setState({
+        isInitialized: true,
+        isAuthenticated: true,
+        user,
+        step: 'success',
+        error: null,
+      });
+      return user;
+    } catch (error) {
+      clearAuthSession();
+      setError(errorMessage(error, 'Authentication failed. Please try again.'));
+      return null;
     }
-  }, [setStep, setError]);
+  }, [setError, setStep]);
 
-  const register = useCallback(async (_name: string, _email: string, _password: string) => {
+  const register = useCallback(async (
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<RegistrationResult | null> => {
     setStep('loading');
     try {
-      // TODO: Connect to registration API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const mockUser: User = {
-        id: 'usr_placeholder_new',
-        email: _email,
-        name: _name,
-        createdAt: new Date().toISOString(),
-      };
-      setState({ isAuthenticated: true, user: mockUser, step: 'success', error: null });
-    } catch {
-      setError('Registration failed. Please try again.');
+      const { firstName, lastName } = splitName(name);
+      const result = await authApi.register({ email, password, firstName, lastName });
+      setState({
+        isInitialized: true,
+        isAuthenticated: false,
+        user: null,
+        step: 'success',
+        error: null,
+      });
+      return result;
+    } catch (error) {
+      setError(errorMessage(error, 'Registration failed. Please try again.'));
+      return null;
     }
-  }, [setStep, setError]);
+  }, [setError, setStep]);
 
-  const forgotPassword = useCallback(async (_email: string) => {
+  const forgotPassword = useCallback(async (email: string): Promise<boolean> => {
     setStep('loading');
     try {
-      // TODO: Connect to password reset API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setState((prev) => ({ ...prev, step: 'success', error: null }));
-    } catch {
-      setError('Password reset request failed.');
+      await authApi.forgotPassword(email);
+      setState((previous) => ({ ...previous, step: 'success', error: null }));
+      return true;
+    } catch (error) {
+      setError(errorMessage(error, 'Password reset request failed.'));
+      return false;
     }
-  }, [setStep, setError]);
+  }, [setError, setStep]);
 
-  const verifyEmail = useCallback(async (_code: string) => {
+  const resetPassword = useCallback(async (token: string, password: string): Promise<boolean> => {
     setStep('loading');
     try {
-      // TODO: Connect to email verification API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setState((prev) => ({ ...prev, step: 'success', error: null }));
-    } catch {
-      setError('Verification failed. Invalid or expired code.');
+      await authApi.resetPassword(token, password);
+      setState((previous) => ({ ...previous, step: 'success', error: null }));
+      return true;
+    } catch (error) {
+      setError(errorMessage(error, 'Password reset failed. Please request a new reset link.'));
+      return false;
     }
-  }, [setStep, setError]);
+  }, [setError, setStep]);
 
-  const logout = useCallback(() => {
-    setState(INITIAL_AUTH_STATE);
+  const verifyEmail = useCallback(async (token: string): Promise<boolean> => {
+    setStep('loading');
+    try {
+      await authApi.verifyEmail(token);
+      setState({
+        isInitialized: true,
+        isAuthenticated: false,
+        user: null,
+        step: 'success',
+        error: null,
+      });
+      return true;
+    } catch (error) {
+      setError(errorMessage(error, 'Verification failed. The link may be invalid or expired.'));
+      return false;
+    }
+  }, [setError, setStep]);
+
+  const resendVerificationEmail = useCallback(async (email: string): Promise<boolean> => {
+    setStep('loading');
+    try {
+      await authApi.resendVerificationEmail(email);
+      setState((previous) => ({ ...previous, step: 'success', error: null }));
+      return true;
+    } catch (error) {
+      setError(errorMessage(error, 'Unable to resend the verification email.'));
+      return false;
+    }
+  }, [setError, setStep]);
+
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // The local session is always cleared, even when the server session has expired.
+    } finally {
+      clearAuthSession();
+      setState({
+        ...INITIAL_AUTH_STATE,
+        isInitialized: true,
+        step: 'idle',
+      });
+    }
   }, []);
 
   const resetStep = useCallback(() => {
-    setState((prev) => ({ ...prev, step: 'idle', error: null }));
+    setState((previous) => ({ ...previous, step: 'idle', error: null }));
   }, []);
 
   return (
@@ -108,7 +221,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         forgotPassword,
+        resetPassword,
         verifyEmail,
+        resendVerificationEmail,
         resetStep,
       }}
     >

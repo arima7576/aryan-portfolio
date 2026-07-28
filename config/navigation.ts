@@ -30,6 +30,7 @@ export const PAGE_METAS: PageMeta[] = [
   { title: 'Login', description: 'Sign in to your account', path: '/login' },
   { title: 'Register', description: 'Create your account', path: '/register' },
   { title: 'Forgot Password', description: 'Reset your password', path: '/forgot-password' },
+  { title: 'Reset Password', description: 'Choose a new password', path: '/reset-password' },
   { title: 'Verify Email', description: 'Verify your email address', path: '/verify-email' },
   { title: 'Dashboard', description: 'Your Arima OS dashboard', path: '/dashboard', isProtected: true },
 ];

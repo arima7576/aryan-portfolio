@@ -12,7 +12,7 @@ import { useAuth } from '@/providers';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, step, error, resetStep } = useAuth();
+  const { login, step, error, isAuthenticated, resetStep } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,14 +33,14 @@ export default function LoginPage() {
     e.preventDefault();
     resetStep();
     if (!validate()) return;
-    await login(email, password);
+    await login(email, password, rememberMe);
   };
 
   // After successful auth, redirect based on selectedDivision
   useEffect(() => {
-    if (step === 'success') {
+    if (step === 'success' && isAuthenticated) {
       const returnPath = sessionStorage.getItem('arimaReturnPath');
-      if (returnPath?.startsWith('/')) {
+      if (returnPath?.startsWith('/') && !returnPath.startsWith('//')) {
         sessionStorage.removeItem('arimaReturnPath');
         router.push(returnPath);
         return;
@@ -53,7 +53,7 @@ export default function LoginPage() {
         router.push('/portfolio-lab');
       }
     }
-  }, [step, router]);
+  }, [isAuthenticated, step, router]);
 
   return (
     <AuthLayout title="Welcome Back" subtitle="Sign in to continue your journey">
@@ -68,6 +68,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
             placeholder="you@example.com"
           />
@@ -89,6 +90,7 @@ export default function LoginPage() {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 pr-12 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
               placeholder="••••••••"
             />
@@ -158,7 +160,7 @@ export default function LoginPage() {
             Forgot password?
           </Link>
           <p className="text-[9px] font-mono text-white/10">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-white/30 hover:text-white/60 transition-colors">
               Register
             </Link>

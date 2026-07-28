@@ -9,33 +9,50 @@ import { motion } from 'framer-motion';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { useAuth } from '@/providers';
 
+const queryValue = (name: string) => (
+  typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get(name) ?? ''
+);
+
 export default function VerifyEmailPage() {
-  const { verifyEmail, step, error, resetStep } = useAuth();
-  const [code, setCode] = useState('');
+  const { verifyEmail, resendVerificationEmail, step, error, resetStep } = useAuth();
+  const [token, setToken] = useState(() => queryValue('token'));
+  const [email, setEmail] = useState(() => queryValue('email'));
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isVerified, setIsVerified] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
-  const validate = () => {
-    const errors: Record<string, string> = {};
-    if (!code.trim()) errors.code = 'Verification code is required';
-    else if (code.length < 4) errors.code = 'Invalid verification code';
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  const validateToken = () => {
+    if (token.trim()) return true;
+    setValidationErrors((previous) => ({ ...previous, token: 'Verification token is required' }));
+    return false;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const validateEmail = () => {
+    if (/\S+@\S+\.\S+/.test(email)) return true;
+    setValidationErrors((previous) => ({ ...previous, email: 'Enter a valid email address' }));
+    return false;
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     resetStep();
-    if (!validate()) return;
-    await verifyEmail(code);
-    if (step === 'success') {
-      setIsVerified(true);
-    }
+    setValidationErrors({});
+    if (!validateToken()) return;
+    const verified = await verifyEmail(token.trim());
+    if (verified) setIsVerified(true);
+  };
+
+  const handleResend = async () => {
+    resetStep();
+    setValidationErrors({});
+    if (!validateEmail()) return;
+    const sent = await resendVerificationEmail(email.trim());
+    if (sent) setResendSent(true);
   };
 
   if (isVerified) {
     return (
-      <AuthLayout title="Email Verified" subtitle="Your account is active">
+      <AuthLayout title="Email Verified" subtitle="Your account is ready">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -43,13 +60,13 @@ export default function VerifyEmailPage() {
         >
           <div className="w-12 h-[1px] bg-blue-400/30 mx-auto" />
           <p className="text-[10px] font-mono text-white/30 leading-relaxed">
-            Your email has been verified. You can now access all Arima Finance features.
+            Your email has been verified. Sign in to enter your private Arima workspace.
           </p>
           <Link
-            href="/dashboard"
+            href="/login"
             className="inline-block text-[9px] font-mono text-white/30 hover:text-white/60 transition-colors tracking-wider uppercase"
           >
-            Go to Dashboard →
+            Continue to sign in →
           </Link>
         </motion.div>
       </AuthLayout>
@@ -57,30 +74,47 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <AuthLayout title="Verify Email" subtitle="Enter the verification code sent to your email">
+    <AuthLayout title="Verify Email" subtitle="Enter the verification token from your email">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Code */}
         <div>
-          <label htmlFor="code" className="block text-[9px] font-mono text-white/30 uppercase tracking-widest mb-2">
-            Verification Code
+          <label htmlFor="email" className="block text-[9px] font-mono text-white/30 uppercase tracking-widest mb-2">
+            Email
           </label>
           <input
-            id="code"
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm text-center tracking-[0.3em] font-mono focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
-            placeholder="000000"
-            maxLength={6}
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
+            placeholder="you@example.com"
           />
-          {validationErrors.code && (
-            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-[10px] font-mono text-red-400/80 text-center">
-              {validationErrors.code}
+          {validationErrors.email && (
+            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-[10px] font-mono text-red-400/80">
+              {validationErrors.email}
             </motion.p>
           )}
         </div>
 
-        {/* Error State */}
+        <div>
+          <label htmlFor="token" className="block text-[9px] font-mono text-white/30 uppercase tracking-widest mb-2">
+            Verification Token
+          </label>
+          <input
+            id="token"
+            type="text"
+            value={token}
+            onChange={(event) => setToken(event.target.value)}
+            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm text-center tracking-[0.12em] font-mono focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
+            placeholder="Paste your verification token"
+          />
+          {validationErrors.token && (
+            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-[10px] font-mono text-red-400/80 text-center">
+              {validationErrors.token}
+            </motion.p>
+          )}
+        </div>
+
         {error && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -91,7 +125,12 @@ export default function VerifyEmailPage() {
           </motion.div>
         )}
 
-        {/* Submit */}
+        {resendSent && (
+          <p className="text-[10px] font-mono text-blue-300/70 text-center">
+            A new verification email has been sent if the account exists.
+          </p>
+        )}
+
         <button
           type="submit"
           disabled={step === 'loading'}
@@ -100,19 +139,19 @@ export default function VerifyEmailPage() {
           <div className="absolute inset-0 border border-white/20 group-hover:border-blue-400/50 transition-colors duration-500" />
           <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <span className="relative text-white/70 group-hover:text-white text-sm tracking-[0.2em] uppercase font-light">
-            {step === 'loading' ? (
-              <span className="flex items-center justify-center gap-3">
-                <span className="w-3 h-[1px] bg-blue-400/50 animate-pulse" />
-                Verifying...
-                <span className="w-3 h-[1px] bg-blue-400/50 animate-pulse" />
-              </span>
-            ) : (
-              'Verify Email'
-            )}
+            {step === 'loading' ? 'Verifying...' : 'Verify Email'}
           </span>
         </button>
 
-        {/* Back */}
+        <button
+          type="button"
+          onClick={() => void handleResend()}
+          disabled={step === 'loading'}
+          className="block w-full text-[9px] font-mono text-white/25 hover:text-white/55 disabled:cursor-not-allowed disabled:opacity-50 transition-colors tracking-wider"
+        >
+          Resend verification email
+        </button>
+
         <div className="text-center">
           <Link href="/login" className="text-[9px] font-mono text-white/20 hover:text-white/50 transition-colors tracking-wider">
             ← Back to login

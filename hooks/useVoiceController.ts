@@ -7,8 +7,10 @@ import type {
   VoiceMode,
   VoicePanelAction,
   VoiceState,
+  VoiceStatus,
+  VoiceNavigationAction,
 } from '@/types/voice';
-import { VoiceApiClient } from '@/utils/voice-api';
+import { initialVoiceMode, VoiceApiClient } from '@/utils/voice-api';
 
 type RecognitionResult = {
   isFinal: boolean;
@@ -45,6 +47,31 @@ declare global {
 
 type VoiceControllerOptions = {
   onPanel?: (panel: VoicePanelAction | null) => void;
+  onVoiceResponse?: (response: VoiceGatewayResponse) => void;
+  onNavigation?: (
+    action: VoiceNavigationAction,
+    response: VoiceGatewayResponse,
+  ) => boolean;
+  onStateChange?: (state: VoiceState) => void;
+};
+
+const recoveryCopy: Record<string, { message: string; status: VoiceStatus }> = {
+  'not-allowed': {
+    message: 'Microphone blocked. Keyboard mode is active; update browser permissions to retry.',
+    status: 'microphone_blocked',
+  },
+  'service-not-allowed': {
+    message: 'Speech recognition is unavailable by browser policy. Keyboard mode is active.',
+    status: 'recognition_unavailable',
+  },
+  network: {
+    message: 'Recognition service unavailable. Keyboard mode is active; retry when ready.',
+    status: 'recognition_unavailable',
+  },
+  aborted: {
+    message: 'Listening was stopped. Keyboard mode remains available.',
+    status: 'keyboard_mode',
+  },
 };
 
 export function useVoiceController(options: VoiceControllerOptions = {}) {
@@ -52,8 +79,12 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
   const api = useRef(new VoiceApiClient());
   const recognition = useRef<BrowserRecognition | null>(null);
   const lastResponse = useRef('');
+  const recoveryTimer = useRef<number | null>(null);
+  const speechPulseTimer = useRef<number | null>(null);
+  const speechWasCancelled = useRef(false);
   const [state, setState] = useState<VoiceState>('idle');
-  const [mode, setMode] = useState<VoiceMode>(api.current.mode);
+  const [mode, setMode] = useState<VoiceMode>(initialVoiceMode);
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('voice_ready');
   const [partialTranscript, setPartialTranscript] = useState('');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
@@ -65,75 +96,167 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
     'unknown' | 'granted' | 'denied'
   >('unknown');
   const [speechSupported, setSpeechSupported] = useState(true);
+  const [speechAmplitude, setSpeechAmplitude] = useState(0.24);
+
+  const clearRecoveryTimer = useCallback(() => {
+    if (recoveryTimer.current !== null) {
+      window.clearTimeout(recoveryTimer.current);
+      recoveryTimer.current = null;
+    }
+  }, []);
+
+  const clearSpeechPulse = useCallback(() => {
+    if (speechPulseTimer.current !== null) {
+      window.clearInterval(speechPulseTimer.current);
+      speechPulseTimer.current = null;
+    }
+    setSpeechAmplitude(0.24);
+  }, []);
+
+  const settle = useCallback((delay = 0) => {
+    clearRecoveryTimer();
+    recoveryTimer.current = window.setTimeout(() => {
+      setState('idle');
+      recoveryTimer.current = null;
+    }, delay);
+  }, [clearRecoveryTimer]);
 
   const navigate = useCallback((result: VoiceGatewayResponse) => {
     options.onPanel?.(result.panel_action ?? null);
     const action = result.navigation_action;
     if (!action) return;
+    if (options.onNavigation?.(action, result)) return;
     if (action.path === 'back') {
       router.back();
       return;
     }
     const destination = action.focus
-      ? `${action.path}#${encodeURIComponent(action.focus)}`
+      ? action.path + '#' + encodeURIComponent(action.focus)
       : action.path;
     window.setTimeout(() => router.push(destination), 300);
   }, [options, router]);
 
+  const stopSpeech = useCallback(() => {
+    speechWasCancelled.current = true;
+    clearSpeechPulse();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, [clearSpeechPulse]);
+
   const speak = useCallback((text: string) => {
-    if (muted || !('speechSynthesis' in window)) {
+    if (muted || typeof window === 'undefined' || !('speechSynthesis' in window)) {
       setState('idle');
+      setVoiceStatus('voice_ready');
       return;
     }
-    window.speechSynthesis.cancel();
+    stopSpeech();
+    speechWasCancelled.current = false;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = navigator.language || 'en-GB';
     utterance.rate = 0.96;
     utterance.pitch = 0.92;
-    utterance.onstart = () => setState('speaking');
-    utterance.onend = () => setState('idle');
-    utterance.onerror = () => {
-      setError('Browser speech playback was interrupted.');
-      setState('error');
+    utterance.onstart = () => {
+      setState('speaking');
+      setVoiceStatus('voice_ready');
+      let tick = 0;
+      speechPulseTimer.current = window.setInterval(() => {
+        tick += 1;
+        setSpeechAmplitude(0.28 + (Math.sin(tick * 1.47) + 1) * 0.26);
+      }, 130);
+    };
+    utterance.onend = () => {
+      clearSpeechPulse();
+      setState('idle');
+      setVoiceStatus('voice_ready');
+    };
+    utterance.onerror = (event) => {
+      clearSpeechPulse();
+      const errorCode = (event as SpeechSynthesisErrorEvent).error;
+      if (speechWasCancelled.current || errorCode === 'interrupted' || errorCode === 'canceled') {
+        setVoiceStatus('speech_playback_interrupted');
+        settle(180);
+        return;
+      }
+      setError('Browser speech playback was interrupted. You can continue by keyboard.');
+      setVoiceStatus('keyboard_mode');
+      setKeyboardOpen(true);
+      setState('warning');
+      settle(700);
     };
     window.speechSynthesis.speak(utterance);
-  }, [muted]);
+  }, [clearSpeechPulse, muted, settle, stopSpeech]);
 
   const submitTranscript = useCallback(async (value: string) => {
     const finalTranscript = value.trim();
     if (!finalTranscript) return;
+    clearRecoveryTimer();
     setTranscript(finalTranscript);
     setPartialTranscript('');
     setError(null);
+    setVoiceStatus('idle');
     setState('thinking');
     try {
       const result = await api.current.submitTranscript(finalTranscript);
       setMode(api.current.mode);
       setResponse(result.visual_response_text);
       lastResponse.current = result.response_text;
-      if (result.approval_request) setState('awaiting_approval');
+      options.onVoiceResponse?.(result);
+      if (result.approval_request) {
+        setState('awaiting_approval');
+        setVoiceStatus('voice_ready');
+      }
       navigate(result);
       if (!result.approval_request) speak(result.response_text);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Voice request failed.');
-      setState('error');
+      setVoiceStatus('keyboard_mode');
+      setKeyboardOpen(true);
+      setState('warning');
+      settle(800);
     }
-  }, [navigate, speak]);
+  }, [clearRecoveryTimer, navigate, options, settle, speak]);
+
+  const handleRecognitionFailure = useCallback((code: string) => {
+    const normalized = code.toLowerCase();
+    const recovery = recoveryCopy[normalized] ?? {
+      message: 'Speech recognition is unavailable right now. Keyboard mode is active; retry when ready.',
+      status: 'recognition_unavailable' as VoiceStatus,
+    };
+    if (normalized === 'not-allowed') setMicrophonePermission('denied');
+    setError(recovery.message);
+    setVoiceStatus(recovery.status);
+    setKeyboardOpen(true);
+    setPartialTranscript('');
+    setState('warning');
+    settle(700);
+  }, [settle]);
 
   const startListening = useCallback(async () => {
     if (!api.current.enabled) {
       setError('Voice is disabled by configuration. Keyboard fallback remains available.');
+      setVoiceStatus('keyboard_mode');
       setKeyboardOpen(true);
       return;
     }
     const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!Recognition) {
       setSpeechSupported(false);
-      setError('Speech recognition is unavailable in this browser. Use the keyboard fallback.');
+      setError('Browser voice unsupported. Keyboard mode is active.');
+      setVoiceStatus('browser_unsupported');
       setKeyboardOpen(true);
       return;
     }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setSpeechSupported(false);
+      setError('Microphone access is unavailable in this browser. Keyboard mode is active.');
+      setVoiceStatus('browser_unsupported');
+      setKeyboardOpen(true);
+      return;
+    }
+    clearRecoveryTimer();
     setState('requesting_microphone');
+    setVoiceStatus('requesting_microphone');
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -141,9 +264,11 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
       setMicrophonePermission('granted');
     } catch {
       setMicrophonePermission('denied');
-      setError('Microphone permission was denied. You can continue with the keyboard fallback.');
+      setError('Microphone blocked. Keyboard mode is active; update browser permissions to retry.');
+      setVoiceStatus('microphone_blocked');
       setKeyboardOpen(true);
-      setState('error');
+      setState('warning');
+      settle(700);
       return;
     }
     const recognizer = new Recognition();
@@ -165,9 +290,8 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
       if (final) void submitTranscript(final);
     };
     recognizer.onerror = (event) => {
-      if (event.error === 'not-allowed') setMicrophonePermission('denied');
-      setError(`Speech recognition error: ${event.error.replaceAll('-', ' ')}.`);
-      setState('error');
+      recognition.current = null;
+      handleRecognitionFailure(event.error);
     };
     recognizer.onend = () => {
       recognition.current = null;
@@ -176,59 +300,88 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
       ));
     };
     recognition.current = recognizer;
-    recognizer.start();
-    setState('listening');
-  }, [submitTranscript]);
+    try {
+      recognizer.start();
+      setState('listening');
+      setVoiceStatus('listening_restored');
+    } catch {
+      recognition.current = null;
+      handleRecognitionFailure('network');
+    }
+  }, [clearRecoveryTimer, handleRecognitionFailure, settle, submitTranscript]);
+
+  const retryListening = useCallback(async () => {
+    setVoiceStatus('retrying');
+    setError(null);
+    await startListening();
+  }, [startListening]);
 
   const stopListening = useCallback(() => {
     recognition.current?.stop();
     recognition.current = null;
+    setPartialTranscript('');
     setState('idle');
+    setVoiceStatus('voice_ready');
   }, []);
 
   const interrupt = useCallback(async () => {
     recognition.current?.abort();
     recognition.current = null;
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     setState('interrupted');
+    setVoiceStatus('speech_playback_interrupted');
+    settle(460);
     try {
       await api.current.interrupt();
     } catch {
       setError('Arima stopped locally; the live gateway could not be notified.');
     }
-  }, []);
+  }, [settle, stopSpeech]);
 
   const cancel = useCallback(async () => {
     recognition.current?.abort();
-    window.speechSynthesis?.cancel();
+    recognition.current = null;
+    stopSpeech();
     setState('cancelled');
+    setVoiceStatus('voice_ready');
+    settle(460);
     try {
       await api.current.cancel();
     } catch {
       setError('The local session was cancelled; the live gateway could not be notified.');
     }
-  }, []);
+  }, [settle, stopSpeech]);
 
   const repeat = useCallback(() => {
     if (lastResponse.current) speak(lastResponse.current);
   }, [speak]);
 
   useEffect(() => {
+    options.onStateChange?.(state);
+  }, [options, state]);
+
+  useEffect(() => {
     let active = true;
     void api.current.createSession().then(() => {
       if (active) setMode(api.current.mode);
     });
-    const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
-    setSpeechSupported(Boolean(Recognition));
+    const supportTimer = window.setTimeout(() => {
+      const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+      setSpeechSupported(Boolean(Recognition));
+    }, 0);
     return () => {
       active = false;
+      window.clearTimeout(supportTimer);
       recognition.current?.abort();
+      stopSpeech();
+      clearRecoveryTimer();
     };
-  }, []);
+  }, [clearRecoveryTimer, stopSpeech]);
 
   return {
     state,
     mode,
+    voiceStatus,
     partialTranscript,
     transcript,
     response,
@@ -238,10 +391,12 @@ export function useVoiceController(options: VoiceControllerOptions = {}) {
     keyboardOpen,
     microphonePermission,
     speechSupported,
+    speechAmplitude,
     setMuted,
     setCaptions,
     setKeyboardOpen,
     startListening,
+    retryListening,
     stopListening,
     submitTranscript,
     interrupt,

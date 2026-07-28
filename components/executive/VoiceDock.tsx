@@ -36,15 +36,19 @@ export function VoiceDock({ context }: Props) {
       <button
         type="button"
         className={`voice-dock-core state-${voice.state}`}
-        onClick={() => void voice.startListening()}
-        aria-label={`Speak to Arima. Current state: ${voice.state}`}
+        onClick={() => (
+          voice.state === 'speaking'
+            ? void voice.interrupt()
+            : void voice.startListening()
+        )}
+        aria-label={voice.state === 'speaking' ? 'Interrupt Arima' : 'Speak to Arima. Current state: ' + voice.state}
       >
         <i /><i />
         <span>AF</span>
       </button>
       <div className="voice-dock-copy">
         <span>ARIMA / {voice.mode}</span>
-        <strong>{voice.state.replaceAll('_', ' ')}</strong>
+        <strong>{voice.voiceStatus.replaceAll('_', ' ')}</strong>
       </div>
       <button type="button" className="voice-dock-expand" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
         {open ? 'Close' : 'Ask'}
@@ -55,6 +59,7 @@ export function VoiceDock({ context }: Props) {
             <button type="button" key={label} onClick={() => void voice.submitTranscript(prompt)}>{label}</button>
           ))}
           <button type="button" onClick={() => void voice.interrupt()}>Stop</button>
+          {voice.voiceStatus === 'recognition_unavailable' && <button type="button" onClick={() => void voice.retryListening()}>Retry voice</button>}
           <Link href="/executive">Executive</Link>
           {voice.response && <p aria-live="polite">{voice.response}</p>}
         </div>

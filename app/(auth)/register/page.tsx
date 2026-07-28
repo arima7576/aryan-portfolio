@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const validate = () => {
     const errors: Record<string, string> = {};
@@ -39,22 +38,11 @@ export default function RegisterPage() {
     e.preventDefault();
     resetStep();
     if (!validate()) return;
-    setHasSubmitted(true);
-    await register(name, email, password);
-  };
-
-  // After successful registration, redirect based on selectedDivision
-  useEffect(() => {
-    if (step === 'success' && hasSubmitted) {
-      const stored = sessionStorage.getItem('selectedDivision');
-      if (stored) {
-        sessionStorage.removeItem('selectedDivision');
-        router.push(stored === 'investment-banking' ? '/investment-banking' : stored === 'projects' ? '/projects' : '/portfolio-lab');
-      } else {
-        router.push('/verify-email');
-      }
+    const result = await register(name, email, password);
+    if (result?.verificationRequired) {
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     }
-  }, [step, router, hasSubmitted]);
+  };
 
   return (
     <AuthLayout title="Create Account" subtitle="Begin your Arima journey">
@@ -69,6 +57,7 @@ export default function RegisterPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
             placeholder="Your name"
           />
@@ -89,6 +78,7 @@ export default function RegisterPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
             placeholder="you@example.com"
           />
@@ -110,6 +100,7 @@ export default function RegisterPage() {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
               className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 pr-12 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
               placeholder="••••••••"
             />
@@ -138,6 +129,7 @@ export default function RegisterPage() {
             type={showPassword ? 'text' : 'password'}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
             placeholder="••••••••"
           />

@@ -39,10 +39,11 @@ It never silently describes demo data as live data.
 
 Live mode sends final transcript text to the Voice Gateway. The typed client
 supports session creation, transcript submission, interrupt, cancel, health,
-request timeouts, network fallback, and correlation IDs. The current website
-authentication provider is a development placeholder; a production access
-token integration must store the backend access token under
-`arima_access_token` before live authenticated calls can succeed.
+request timeouts, network fallback, and correlation IDs. Authentication is
+provided by the shared production auth provider: access tokens stay in memory,
+refresh sessions use secure backend cookies, and the provider sends CSRF tokens
+for cookie-backed mutations. The Voice Gateway reads that in-memory token; it
+does not read browser storage.
 
 ## Environment
 
@@ -56,16 +57,16 @@ Safe static-export defaults require no variables.
 
 ## Local use
 
-Run `npm run dev`, sign in through the placeholder login screen, then open
-`/executive`. To test live mode, run Arima Executive OS, set
-`NEXT_PUBLIC_ARIMA_API_URL`, and connect the frontend authentication provider
-to the backend token flow. Without that token integration, the client clearly
-falls back to Demo Mode.
+Run `npm run dev`, configure `NEXT_PUBLIC_ARIMA_API_URL`, register and verify
+an account through the backend, then sign in before opening `/executive`.
+Without a configured Voice Gateway, the client clearly falls back to Demo Mode.
 
 ## Security and deployment limitations
 
-The existing protected route and login provider are a development/demo access
-guard, not production security. Growth actions change local mock state only;
-they never publish, email, post, or call an external service. Static export and
-Cloudflare compatibility are preserved because all speech and API behavior is
-client-side and the website builds without a reachable backend.
+The protected route is a navigation guard, not an authorization boundary; the
+backend remains responsible for validating every bearer token, session, CSRF
+token, permission and workspace boundary. Growth actions change local mock
+state only; they never publish, email, post, or call an external service.
+Static export and Cloudflare compatibility are preserved because browser calls
+the configured backend origin directly; that origin must allow the deployed
+frontend origin with credentialed CORS.

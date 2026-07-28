@@ -1,3 +1,5 @@
+import type { ExperienceEvent } from './experience';
+
 export type VoiceState =
   | 'idle'
   | 'requesting_microphone'
@@ -10,8 +12,21 @@ export type VoiceState =
   | 'speaking'
   | 'interrupted'
   | 'completed'
+  | 'warning'
   | 'error'
   | 'cancelled';
+
+export type VoiceStatus =
+  | 'voice_ready'
+  | 'requesting_microphone'
+  | 'microphone_blocked'
+  | 'recognition_unavailable'
+  | 'browser_unsupported'
+  | 'keyboard_mode'
+  | 'retrying'
+  | 'listening_restored'
+  | 'speech_playback_interrupted'
+  | 'idle';
 
 export type VoiceEventType =
   | 'session_started'
@@ -83,6 +98,7 @@ export type VoiceGatewayResponse = {
   panel_action?: VoicePanelAction | null;
   approval_request?: VoiceApprovalAction | null;
   events: VoiceEvent[];
+  experience_events?: ExperienceEvent[];
   demo: boolean;
 };
 

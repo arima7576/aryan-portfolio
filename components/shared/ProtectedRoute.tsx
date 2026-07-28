@@ -13,18 +13,18 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, step } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated && step !== 'loading') {
-      sessionStorage.setItem('arimaReturnPath', pathname);
-      router.push('/login');
-    }
-  }, [isAuthenticated, pathname, step, router]);
+    if (!isInitialized || isAuthenticated) return;
+    const returnPath = pathname.startsWith('/') && !pathname.startsWith('//') ? pathname : '/';
+    sessionStorage.setItem('arimaReturnPath', returnPath);
+    router.replace('/login');
+  }, [isAuthenticated, isInitialized, pathname, router]);
 
-  if (!isAuthenticated) {
+  if (!isInitialized || !isAuthenticated) {
     return <LoadingScreen message="Authenticating..." />;
   }
 

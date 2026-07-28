@@ -27,8 +27,8 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     resetStep();
     if (!validate()) return;
-    await forgotPassword(email);
-    if (step === 'success') {
+    const sent = await forgotPassword(email);
+    if (sent) {
       setIsSubmitted(true);
     }
   };
@@ -69,6 +69,7 @@ export default function ForgotPasswordPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-3.5 text-white text-sm focus:outline-none focus:border-white/30 transition-all duration-300 placeholder:text-white/10"
             placeholder="you@example.com"
           />

@@ -56,7 +56,7 @@ export type CameraState = {
 };
 
 // ─── Authentication ───
-export type AuthStep = 'idle' | 'loading' | 'success' | 'error';
+export type AuthStep = 'initializing' | 'idle' | 'loading' | 'success' | 'error';
 
 export type AuthFormData = {
   email: string;
@@ -71,6 +71,7 @@ export type AuthValidationError = {
 };
 
 export type AuthState = {
+  isInitialized: boolean;
   isAuthenticated: boolean;
   user: User | null;
   step: AuthStep;
@@ -81,7 +82,11 @@ export type User = {
   id: string;
   email: string;
   name: string;
-  avatar?: string;
+  firstName: string;
+  lastName: string;
+  emailVerified: boolean;
+  workspaceId?: string | null;
+  avatar?: string | null;
   createdAt: string;
 };
 

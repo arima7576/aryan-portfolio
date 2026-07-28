@@ -6,54 +6,93 @@ import type {
   VoicePanelAction,
   VoiceSession,
 } from '@/types/voice';
+import type {
+  ActiveChamber,
+  ExperienceEvent,
+  ExperienceEventType,
+} from '@/types/experience';
+import { getAccessToken } from '@/lib/auth-api';
 
 const API_URL = process.env.NEXT_PUBLIC_ARIMA_API_URL?.replace(/\/$/, '');
 const FORCE_DEMO = process.env.NEXT_PUBLIC_ARIMA_DEMO_MODE === 'true';
 const VOICE_ENABLED = process.env.NEXT_PUBLIC_ARIMA_VOICE_ENABLED !== 'false';
 const REQUEST_TIMEOUT_MS = 8_000;
 
+export const initialVoiceMode: VoiceMode = FORCE_DEMO || !API_URL ? 'demo' : 'live';
+
 const command = (transcript: string): {
   text: string;
   navigation?: VoiceNavigationAction;
   panel?: VoicePanelAction;
+  presentation?: 'daily' | 'weekly' | 'watchlist' | 'quant' | 'growth' | 'task' | 'approval';
 } => {
   const value = transcript.toLowerCase().replace(/[?.!,]/g, '');
-  if (value.includes('portfolio')) return {
-    text: 'Opening Portfolio Lab.',
-    navigation: { path: '/portfolio-lab', label: 'Portfolio' },
+  if (
+    value.includes('enter arima')
+    || value.includes('open your intelligence')
+    || value.includes('show me your mind')
+  ) return {
+    text: 'Opening my neural core.',
+    navigation: { path: '/executive?enter=true', label: 'Arima Neural Core', focus: 'enter' },
   };
-  if (value.includes('quant research')) return {
-    text: 'Opening Quant Research.',
-    navigation: { path: '/quant-research', label: 'Quant Research' },
+  if (
+    value.includes('exit the neural core')
+    || value.includes('return to arima')
+    || value.includes('exit arima')
+  ) return {
+    text: 'Returning to my avatar view.',
+    navigation: { path: 'back', label: 'Arima avatar', focus: 'exit' },
+  };
+  if (value.includes('weekly') || value.includes('performance')) return {
+    text: 'Opening Portfolio Intelligence with this simulated weekly performance presentation.',
+    navigation: { path: '/executive?chamber=portfolio', label: 'Portfolio Intelligence' },
+    presentation: 'weekly',
+  };
+  if (value.includes('portfolio')) return {
+    text: 'Following the portfolio pathway into Portfolio Intelligence.',
+    navigation: { path: '/executive?chamber=portfolio', label: 'Portfolio Intelligence' },
+    presentation: 'watchlist',
+  };
+  if (value.includes('quant research') || value.includes('regime')) return {
+    text: 'Following the Quant Research pathway. The regime field is forming.',
+    navigation: { path: '/executive?chamber=quant', label: 'Quant Research' },
+    presentation: 'quant',
   };
   if (value.includes('growth') && value.includes('today')) return {
-    text: 'Opening the work Growth Studio created today.',
-    navigation: { path: '/growth-studio', label: 'Growth Studio', focus: 'today' },
+    text: 'Following the Growth pathway. Today’s private output is assembling.',
+    navigation: { path: '/executive?chamber=growth', label: 'Growth Studio', focus: 'today' },
     panel: { panel: 'growth_output', focus: 'today' },
+    presentation: 'growth',
   };
   if (value.includes('growth studio')) return {
-    text: 'Opening Growth Studio.',
-    navigation: { path: '/growth-studio', label: 'Growth Studio' },
+    text: 'Following the Growth pathway.',
+    navigation: { path: '/executive?chamber=growth', label: 'Growth Studio' },
+    presentation: 'growth',
   };
-  if (value.includes('project')) return {
-    text: 'Opening Projects.',
-    navigation: { path: '/projects', label: 'Projects' },
+  if (value.includes('project') || value.includes('complete a simulated task')) return {
+    text: 'Following the Projects pathway. A completion signal is returning to the core.',
+    navigation: { path: '/executive?chamber=projects', label: 'Projects' },
+    presentation: 'task',
   };
   if (value.includes('go back')) return {
-    text: 'Going back.',
-    navigation: { path: 'back', label: 'Previous view' },
+    text: 'Returning to Arima.',
+    navigation: { path: 'back', label: 'Arima avatar', focus: 'exit' },
   };
   if (value.includes('approval')) return {
-    text: 'You have two items awaiting review.',
+    text: 'Two simulated approval objects are ready for review.',
+    navigation: { path: '/executive?chamber=approvals', label: 'Approvals' },
     panel: { panel: 'executive_briefing', focus: 'approvals' },
+    presentation: 'approval',
   };
   if (value.includes('brief') || value.includes("what's up") || value.includes('whats up')) return {
-    text: 'Good morning. Your portfolio is steady, three priorities need attention, and two approvals are pending.',
+    text: 'Today’s simulated intelligence is ready: three priorities, five watchlist assets, scheduled research and two approvals.',
     panel: { panel: 'executive_briefing', focus: 'today' },
+    presentation: 'daily',
   };
   return {
-    text: 'I am in demo mode. Your executive workspace is ready, with portfolio, research, projects and growth intelligence available.',
+    text: 'I am in demo mode. Ask about today, Portfolio, Quant Research, Growth, Projects or approvals.',
     panel: { panel: 'executive_briefing', focus: 'today' },
+    presentation: 'daily',
   };
 };
 
@@ -61,20 +100,122 @@ const id = () => globalThis.crypto?.randomUUID?.() ?? `demo-${Date.now()}`;
 
 const now = () => new Date().toISOString();
 
-const accessToken = () => {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem('arima_access_token');
-};
+const event = (
+  sessionId: string,
+  correlationId: string,
+  type: ExperienceEventType,
+  timestamp: string,
+  payload: Record<string, unknown>,
+  targetChamber: ActiveChamber | null = null,
+): ExperienceEvent => ({
+  event_id: id(),
+  session_id: sessionId,
+  correlation_id: correlationId,
+  timestamp,
+  type,
+  priority: targetChamber === 'approvals' ? 'high' : 'normal',
+  source: 'browser_demo',
+  target_chamber: targetChamber,
+  payload,
+  duration_hint: 1_000,
+  dismissible: true,
+  requires_attention: targetChamber === 'approvals',
+});
+
+function demoExperienceEvents(
+  sessionId: string,
+  correlationId: string,
+  timestamp: string,
+  resolved: ReturnType<typeof command>,
+): ExperienceEvent[] {
+  const events: ExperienceEvent[] = [
+    event(sessionId, correlationId, 'avatar_state_changed', timestamp, { state: 'thinking' }),
+    event(sessionId, correlationId, 'neural_activity_started', timestamp, { activity: 'demo_request' }),
+  ];
+  const path = resolved.navigation?.path;
+  const target = path?.includes('portfolio') ? 'portfolio'
+    : path?.includes('quant') ? 'quant'
+      : path?.includes('growth') ? 'growth'
+        : path?.includes('projects') ? 'projects'
+          : path?.includes('approvals') ? 'approvals'
+            : null;
+  if (target) {
+    events.push(event(
+      sessionId,
+      correlationId,
+      'chamber_transition_requested',
+      timestamp,
+      { path, label: resolved.navigation?.label ?? target, demo: true },
+      target,
+    ));
+  }
+  if (resolved.presentation === 'daily') {
+    events.push(
+      event(sessionId, correlationId, 'data_object_created', timestamp, {
+        id: 'daily-intelligence',
+        kind: 'insight',
+        title: 'Daily intelligence ready',
+        source: 'demo',
+      }, 'executive'),
+      event(sessionId, correlationId, 'watchlist_visualisation_requested', timestamp, {
+        title: 'Daily watchlist generated',
+        source: 'demo',
+      }, 'portfolio'),
+    );
+  }
+  if (resolved.presentation === 'weekly') {
+    events.push(event(sessionId, correlationId, 'performance_visualisation_requested', timestamp, {
+      title: 'Weekly performance complete',
+      source: 'demo',
+    }, 'portfolio'));
+  }
+  if (resolved.presentation === 'quant') {
+    events.push(event(sessionId, correlationId, 'data_object_created', timestamp, {
+      kind: 'research',
+      title: 'Market regime analysis',
+      source: 'demo',
+    }, 'quant'));
+  }
+  if (resolved.presentation === 'growth') {
+    events.push(event(sessionId, correlationId, 'task_visualisation_requested', timestamp, {
+      kind: 'task',
+      title: 'Growth task complete',
+      source: 'demo',
+    }, 'growth'));
+  }
+  if (resolved.presentation === 'task') {
+    events.push(event(sessionId, correlationId, 'task_visualisation_requested', timestamp, {
+      kind: 'task',
+      title: 'Portfolio Risk Report',
+      source: 'demo',
+      status: 'complete',
+    }, 'projects'));
+  }
+  if (resolved.presentation === 'approval') {
+    events.push(event(sessionId, correlationId, 'approval_visualisation_requested', timestamp, {
+      kind: 'approval',
+      title: 'Investor update draft',
+      source: 'demo',
+      requires_attention: true,
+    }, 'approvals'));
+  }
+  events.push(
+    event(sessionId, correlationId, 'avatar_state_changed', timestamp, { state: 'speaking' }),
+    event(sessionId, correlationId, 'neural_activity_completed', timestamp, { activity: 'demo_request' }),
+  );
+  return events;
+}
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!API_URL) throw new Error('Arima API URL is not configured');
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  const token = accessToken();
+  const token = getAccessToken();
   try {
     const response = await fetch(`${API_URL}${path}`, {
       ...init,
       signal: controller.signal,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'X-Correlation-ID': id(),
@@ -109,9 +250,10 @@ function demoSession(): VoiceSession {
 function demoResponse(sessionId: string, transcript: string): VoiceGatewayResponse {
   const resolved = command(transcript);
   const timestamp = now();
+  const correlationId = id();
   return {
     session_id: sessionId,
-    correlation_id: id(),
+    correlation_id: correlationId,
     state: 'completed',
     transcript,
     response_text: resolved.text,
@@ -120,6 +262,7 @@ function demoResponse(sessionId: string, transcript: string): VoiceGatewayRespon
     panel_action: resolved.panel,
     approval_request: null,
     demo: true,
+    experience_events: demoExperienceEvents(sessionId, correlationId, timestamp, resolved),
     events: [
       { event: 'transcript_final', sequence: 0, timestamp, data: { transcript } },
       { event: 'thinking_started', sequence: 1, timestamp, data: {} },
@@ -143,7 +286,7 @@ function demoResponse(sessionId: string, transcript: string): VoiceGatewayRespon
 
 export class VoiceApiClient {
   private session: VoiceSession | null = null;
-  private currentMode: VoiceMode = FORCE_DEMO || !API_URL ? 'demo' : 'live';
+  private currentMode: VoiceMode = initialVoiceMode;
 
   get mode(): VoiceMode {
     return this.currentMode;
