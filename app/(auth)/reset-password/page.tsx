@@ -25,7 +25,13 @@ export default function ResetPasswordPage() {
     const errors: Record<string, string> = {};
     if (!token.trim()) errors.token = 'This reset link is missing a token';
     if (!password) errors.password = 'Password is required';
-    else if (password.length < 8) errors.password = 'Minimum 8 characters';
+    else if (
+      password.length < 12
+      || !/[a-z]/.test(password)
+      || !/[A-Z]/.test(password)
+      || !/\d/.test(password)
+      || !/[^A-Za-z0-9]/.test(password)
+    ) errors.password = 'Use 12+ characters with upper/lowercase, a number, and a symbol';
     if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;

@@ -17,6 +17,9 @@ export default function VerifyEmailPage() {
   const { verifyEmail, resendVerificationEmail, step, error, resetStep } = useAuth();
   const [token, setToken] = useState(() => queryValue('token'));
   const [email, setEmail] = useState(() => queryValue('email'));
+  const [purpose] = useState<'verification' | 'email_change'>(() => (
+    queryValue('purpose') === 'email_change' ? 'email_change' : 'verification'
+  ));
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isVerified, setIsVerified] = useState(false);
   const [resendSent, setResendSent] = useState(false);
@@ -38,7 +41,7 @@ export default function VerifyEmailPage() {
     resetStep();
     setValidationErrors({});
     if (!validateToken()) return;
-    const verified = await verifyEmail(token.trim());
+    const verified = await verifyEmail(token.trim(), purpose);
     if (verified) setIsVerified(true);
   };
 
@@ -52,7 +55,10 @@ export default function VerifyEmailPage() {
 
   if (isVerified) {
     return (
-      <AuthLayout title="Email Verified" subtitle="Your account is ready">
+      <AuthLayout
+        title={purpose === 'email_change' ? 'Email Updated' : 'Email Verified'}
+        subtitle={purpose === 'email_change' ? 'Your new email is confirmed' : 'Your account is ready'}
+      >
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -60,7 +66,9 @@ export default function VerifyEmailPage() {
         >
           <div className="w-12 h-[1px] bg-blue-400/30 mx-auto" />
           <p className="text-[10px] font-mono text-white/30 leading-relaxed">
-            Your email has been verified. Sign in to enter your private Arima workspace.
+            {purpose === 'email_change'
+              ? 'Your new email address is confirmed. Sign in again to protect your private Arima workspace.'
+              : 'Your email has been verified. Sign in to enter your private Arima workspace.'}
           </p>
           <Link
             href="/login"
@@ -74,7 +82,10 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <AuthLayout title="Verify Email" subtitle="Enter the verification token from your email">
+    <AuthLayout
+      title={purpose === 'email_change' ? 'Confirm Email Change' : 'Verify Email'}
+      subtitle={purpose === 'email_change' ? 'Enter the confirmation token from your email' : 'Enter the verification token from your email'}
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-[9px] font-mono text-white/30 uppercase tracking-widest mb-2">
@@ -139,18 +150,22 @@ export default function VerifyEmailPage() {
           <div className="absolute inset-0 border border-white/20 group-hover:border-blue-400/50 transition-colors duration-500" />
           <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <span className="relative text-white/70 group-hover:text-white text-sm tracking-[0.2em] uppercase font-light">
-            {step === 'loading' ? 'Verifying...' : 'Verify Email'}
+            {step === 'loading'
+              ? 'Confirming...'
+              : purpose === 'email_change'
+                ? 'Confirm Email Change'
+                : 'Verify Email'}
           </span>
         </button>
 
-        <button
+        {purpose === 'verification' && <button
           type="button"
           onClick={() => void handleResend()}
           disabled={step === 'loading'}
           className="block w-full text-[9px] font-mono text-white/25 hover:text-white/55 disabled:cursor-not-allowed disabled:opacity-50 transition-colors tracking-wider"
         >
           Resend verification email
-        </button>
+        </button>}
 
         <div className="text-center">
           <Link href="/login" className="text-[9px] font-mono text-white/20 hover:text-white/50 transition-colors tracking-wider">

@@ -15,7 +15,7 @@ type AuthContextValue = AuthState & {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<boolean>;
   resetPassword: (token: string, password: string) => Promise<boolean>;
-  verifyEmail: (token: string) => Promise<boolean>;
+  verifyEmail: (token: string, purpose?: 'verification' | 'email_change') => Promise<boolean>;
   resendVerificationEmail: (email: string) => Promise<boolean>;
   resetStep: () => void;
 };
@@ -41,6 +41,51 @@ const splitName = (name: string) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(INITIAL_AUTH_STATE);
+  const [refreshAt, setRefreshAt] = useState<number | null>(null);
+
+  const scheduleRefresh = useCallback((expiresIn: number) => {
+    const lifetimeMs = Math.max(1_000, expiresIn * 1_000);
+    setRefreshAt(Date.now() + Math.max(1_000, lifetimeMs - 60_000));
+  }, []);
+
+  const clearSession = useCallback(() => {
+    clearAuthSession();
+    setRefreshAt(null);
+  }, []);
+
+  const refreshActiveSession = useCallback(async () => {
+    try {
+      const session = await authApi.refresh();
+      const user = session.user ?? await authApi.me();
+      if (!user.emailVerified) {
+        clearSession();
+        setState({
+          isInitialized: true,
+          isAuthenticated: false,
+          user: null,
+          step: 'idle',
+          error: 'Please verify your email before signing in.',
+        });
+        return;
+      }
+      scheduleRefresh(session.expiresIn);
+      setState((previous) => ({
+        ...previous,
+        isInitialized: true,
+        isAuthenticated: true,
+        user,
+        step: 'idle',
+        error: null,
+      }));
+    } catch {
+      clearSession();
+      setState({
+        ...INITIAL_AUTH_STATE,
+        isInitialized: true,
+        step: 'idle',
+      });
+    }
+  }, [clearSession, scheduleRefresh]);
 
   const setStep = useCallback((step: AuthStep) => {
     setState((previous) => ({
@@ -74,9 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           step: 'idle',
           error: user.emailVerified ? null : 'Please verify your email before signing in.',
         });
-        if (!user.emailVerified) clearAuthSession();
+        if (!user.emailVerified) {
+          clearSession();
+        } else {
+          scheduleRefresh(session.expiresIn);
+        }
       } catch {
-        clearAuthSession();
+        clearSession();
         if (!active) return;
         setState({
           ...INITIAL_AUTH_STATE,
@@ -90,7 +139,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [clearSession, scheduleRefresh]);
+
+  useEffect(() => {
+    if (!refreshAt || !state.isAuthenticated) return;
+    const timer = window.setTimeout(() => {
+      void refreshActiveSession();
+    }, Math.max(0, refreshAt - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [refreshActiveSession, refreshAt, state.isAuthenticated]);
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean): Promise<User | null> => {
     setStep('loading');
@@ -98,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const session = await authApi.login({ email, password, rememberMe });
       const user = session.user ?? await authApi.me();
       if (!user.emailVerified) {
-        clearAuthSession();
+        clearSession();
         setError('Please verify your email before signing in.');
         return null;
       }
@@ -109,13 +166,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         step: 'success',
         error: null,
       });
+      scheduleRefresh(session.expiresIn);
       return user;
     } catch (error) {
-      clearAuthSession();
+      clearSession();
       setError(errorMessage(error, 'Authentication failed. Please try again.'));
       return null;
     }
-  }, [setError, setStep]);
+  }, [clearSession, scheduleRefresh, setError, setStep]);
 
   const register = useCallback(async (
     name: string,
@@ -164,10 +222,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setError, setStep]);
 
-  const verifyEmail = useCallback(async (token: string): Promise<boolean> => {
+  const verifyEmail = useCallback(async (
+    token: string,
+    purpose: 'verification' | 'email_change' = 'verification',
+  ): Promise<boolean> => {
     setStep('loading');
     try {
-      await authApi.verifyEmail(token);
+      if (purpose === 'email_change') {
+        await authApi.confirmEmailChange(token);
+      } else {
+        await authApi.verifyEmail(token);
+      }
+      clearSession();
       setState({
         isInitialized: true,
         isAuthenticated: false,
@@ -180,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(errorMessage(error, 'Verification failed. The link may be invalid or expired.'));
       return false;
     }
-  }, [setError, setStep]);
+  }, [clearSession, setError, setStep]);
 
   const resendVerificationEmail = useCallback(async (email: string): Promise<boolean> => {
     setStep('loading');
@@ -200,14 +266,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // The local session is always cleared, even when the server session has expired.
     } finally {
-      clearAuthSession();
+      clearSession();
       setState({
         ...INITIAL_AUTH_STATE,
         isInitialized: true,
         step: 'idle',
       });
     }
-  }, []);
+  }, [clearSession]);
 
   const resetStep = useCallback(() => {
     setState((previous) => ({ ...previous, step: 'idle', error: null }));

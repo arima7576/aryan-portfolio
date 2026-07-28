@@ -11,7 +11,7 @@ import type {
   ExperienceEvent,
   ExperienceEventType,
 } from '@/types/experience';
-import { getAccessToken } from '@/lib/auth-api';
+import { authApi, getAccessToken } from '@/lib/auth-api';
 
 const API_URL = process.env.NEXT_PUBLIC_ARIMA_API_URL?.replace(/\/$/, '');
 const FORCE_DEMO = process.env.NEXT_PUBLIC_ARIMA_DEMO_MODE === 'true';
@@ -210,19 +210,30 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!API_URL) throw new Error('Arima API URL is not configured');
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  const token = getAccessToken();
   try {
-    const response = await fetch(`${API_URL}${path}`, {
-      ...init,
-      signal: controller.signal,
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Correlation-ID': id(),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...init.headers,
-      },
-    });
+    const performRequest = () => {
+      const token = getAccessToken();
+      return fetch(`${API_URL}${path}`, {
+        ...init,
+        signal: controller.signal,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Correlation-ID': id(),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...init.headers,
+        },
+      });
+    };
+    let response = await performRequest();
+    if (response.status === 401) {
+      try {
+        await authApi.refresh();
+        response = await performRequest();
+      } catch {
+        // Preserve the original unauthorized response below when rotation fails.
+      }
+    }
     if (!response.ok) {
       throw new Error(`Voice API returned ${response.status}`);
     }

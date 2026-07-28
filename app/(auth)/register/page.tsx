@@ -23,11 +23,19 @@ export default function RegisterPage() {
 
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!name.trim()) errors.name = 'Name is required';
+    if (name.trim().split(/\s+/).filter(Boolean).length < 2) {
+      errors.name = 'Enter your first and last name';
+    }
     if (!email) errors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Invalid email address';
     if (!password) errors.password = 'Password is required';
-    else if (password.length < 8) errors.password = 'Minimum 8 characters';
+    else if (
+      password.length < 12
+      || !/[a-z]/.test(password)
+      || !/[A-Z]/.test(password)
+      || !/\d/.test(password)
+      || !/[^A-Za-z0-9]/.test(password)
+    ) errors.password = 'Use 12+ characters with upper/lowercase, a number, and a symbol';
     if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
     if (!acceptTerms) errors.terms = 'You must accept the terms';
     setValidationErrors(errors);
