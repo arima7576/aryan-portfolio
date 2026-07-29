@@ -13,7 +13,7 @@ import type {
 } from '@/types/experience';
 import { authApi, getAccessToken } from '@/lib/auth-api';
 
-const API_URL = process.env.NEXT_PUBLIC_ARIMA_API_URL?.replace(/\/$/, '');
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
 const FORCE_DEMO = process.env.NEXT_PUBLIC_ARIMA_DEMO_MODE === 'true';
 const VOICE_ENABLED = process.env.NEXT_PUBLIC_ARIMA_VOICE_ENABLED !== 'false';
 const REQUEST_TIMEOUT_MS = 8_000;

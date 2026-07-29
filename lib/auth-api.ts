@@ -1,6 +1,6 @@
 import type { User } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_ARIMA_API_URL?.replace(/\/$/, '');
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
 const AUTH_PATH = '/api/v1/auth';
 const CSRF_COOKIE_NAME = process.env.NEXT_PUBLIC_ARIMA_CSRF_COOKIE_NAME ?? 'arima_csrf_token';
 

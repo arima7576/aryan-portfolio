@@ -50,6 +50,15 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+Copy the tracked environment template for a live local integration:
+
+```bash
+cp .env.example .env.local
+```
+
+`NEXT_PUBLIC_API_URL` is compiled into the static export, so restart the dev
+server after changing it.
+
 ## Validation
 
 ```bash
@@ -66,6 +75,42 @@ The production build uses `output: "export"` and writes static assets to `out/`.
 - Build command: `npm run build`
 - Output directory: `out`
 - Node.js version: 22 or newer
+
+### Production API and authentication
+
+Set this Cloudflare Pages build variable for both Production and Preview
+environments that should use the deployed API:
+
+```env
+NEXT_PUBLIC_API_URL=https://arima-executive-os-production.up.railway.app
+NEXT_PUBLIC_ARIMA_DEMO_MODE=false
+```
+
+The API origin must not include `/api/v1`; the shared auth client adds that
+path itself. Login, registration, refresh, logout, profile, and session calls
+all use this same origin with `credentials: "include"`, an in-memory bearer
+token, and the backend-provided CSRF token.
+
+Before browser authentication can work from `https://arimafinance.xyz`, set
+the following Railway service variables and redeploy the backend:
+
+```env
+ENVIRONMENT=production
+FRONTEND_URL=https://arimafinance.xyz
+CORS_ORIGINS=https://arimafinance.xyz,https://www.arimafinance.xyz
+AUTH_COOKIE_SECURE=true
+AUTH_COOKIE_SAMESITE=none
+```
+
+Leave `AUTH_COOKIE_DOMAIN` unset so cookies remain host-only for the Railway
+API origin. Keep the backend `TRUSTED_HOSTS` list explicit and include both
+`arima-executive-os-production.up.railway.app` and
+`healthcheck.railway.app`. Without these backend variables, browsers reject
+credentialed cross-origin requests even though the frontend build succeeds.
+
+For maximum compatibility with browsers that block third-party cookies, map a
+custom API domain such as `api.arimafinance.xyz` to Railway in a later
+deployment; it keeps the frontend and API under the same site.
 
 `wrangler.jsonc` also points Workers Static Assets to `./out` for direct Wrangler deployment. The generated `out/` directory is intentionally ignored by Git.
 

@@ -31,7 +31,7 @@ not upload audio to its backend.
 Demo mode is enabled when:
 
 - `NEXT_PUBLIC_ARIMA_DEMO_MODE=true`;
-- `NEXT_PUBLIC_ARIMA_API_URL` is absent; or
+- `NEXT_PUBLIC_API_URL` is absent; or
 - the configured backend is unavailable or times out.
 
 The UI always displays **DEMO MODE** and returns deterministic local responses.
@@ -49,7 +49,7 @@ does not read browser storage.
 
 | Variable | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_ARIMA_API_URL` | Backend origin, without `/api/v1` |
+| `NEXT_PUBLIC_API_URL` | Backend origin, without `/api/v1` |
 | `NEXT_PUBLIC_ARIMA_DEMO_MODE` | Force deterministic demo behavior |
 | `NEXT_PUBLIC_ARIMA_VOICE_ENABLED` | Disable microphone UI when `false` |
 
@@ -57,7 +57,7 @@ Safe static-export defaults require no variables.
 
 ## Local use
 
-Run `npm run dev`, configure `NEXT_PUBLIC_ARIMA_API_URL`, register and verify
+Run `npm run dev`, configure `NEXT_PUBLIC_API_URL`, register and verify
 an account through the backend, then sign in before opening `/executive`.
 Without a configured Voice Gateway, the client clearly falls back to Demo Mode.
 
