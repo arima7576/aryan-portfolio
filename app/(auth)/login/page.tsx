@@ -50,7 +50,7 @@ export default function LoginPage() {
         sessionStorage.removeItem('selectedDivision');
         router.push(stored === 'investment-banking' ? '/investment-banking' : stored === 'projects' ? '/projects' : '/portfolio-lab');
       } else {
-        router.push('/portfolio-lab');
+        router.push('/dashboard');
       }
     }
   }, [isAuthenticated, step, router]);

@@ -1,6 +1,5 @@
-import { PortfolioLabView } from '@/components/portfolio-lab/PortfolioLabView';
-import { mockPortfolioDataProvider } from '@/data/portfolio-lab';
+import { WorkspaceDashboard } from '@/components/dashboard/WorkspaceDashboard';
 
-export default async function DashboardPage() {
-  return <PortfolioLabView snapshot={await mockPortfolioDataProvider.getSnapshot()} />;
+export default function DashboardPage() {
+  return <WorkspaceDashboard />;
 }

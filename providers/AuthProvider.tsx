@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AuthState, AuthStep, User } from '@/types';
 import {
   authApi,
@@ -42,6 +42,12 @@ const splitName = (name: string) => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(INITIAL_AUTH_STATE);
   const [refreshAt, setRefreshAt] = useState<number | null>(null);
+  const sessionEpoch = useRef(0);
+
+  const invalidateSessionOperations = useCallback(() => {
+    sessionEpoch.current += 1;
+    return sessionEpoch.current;
+  }, []);
 
   const scheduleRefresh = useCallback((expiresIn: number) => {
     const lifetimeMs = Math.max(1_000, expiresIn * 1_000);
@@ -49,14 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearSession = useCallback(() => {
+    invalidateSessionOperations();
     clearAuthSession();
     setRefreshAt(null);
-  }, []);
+  }, [invalidateSessionOperations]);
 
   const refreshActiveSession = useCallback(async () => {
+    const operationEpoch = sessionEpoch.current;
     try {
       const session = await authApi.refresh();
       const user = session.user ?? await authApi.me();
+      if (operationEpoch !== sessionEpoch.current) return;
       if (!user.emailVerified) {
         clearSession();
         setState({
@@ -78,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error: null,
       }));
     } catch {
+      if (operationEpoch !== sessionEpoch.current) return;
       clearSession();
       setState({
         ...INITIAL_AUTH_STATE,
@@ -106,12 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const operationEpoch = invalidateSessionOperations();
 
     const bootstrap = async () => {
       try {
         const session = await authApi.refresh();
         const user = session.user ?? await authApi.me();
-        if (!active) return;
+        if (!active || operationEpoch !== sessionEpoch.current) return;
         setState({
           isInitialized: true,
           isAuthenticated: user.emailVerified,
@@ -125,8 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           scheduleRefresh(session.expiresIn);
         }
       } catch {
+        if (!active || operationEpoch !== sessionEpoch.current) return;
         clearSession();
-        if (!active) return;
         setState({
           ...INITIAL_AUTH_STATE,
           isInitialized: true,
@@ -139,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [clearSession, scheduleRefresh]);
+  }, [clearSession, invalidateSessionOperations, scheduleRefresh]);
 
   useEffect(() => {
     if (!refreshAt || !state.isAuthenticated) return;
@@ -150,10 +161,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshActiveSession, refreshAt, state.isAuthenticated]);
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean): Promise<User | null> => {
+    const operationEpoch = invalidateSessionOperations();
     setStep('loading');
     try {
       const session = await authApi.login({ email, password, rememberMe });
       const user = session.user ?? await authApi.me();
+      if (operationEpoch !== sessionEpoch.current) return null;
       if (!user.emailVerified) {
         clearSession();
         setError('Please verify your email before signing in.');
@@ -169,11 +182,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       scheduleRefresh(session.expiresIn);
       return user;
     } catch (error) {
+      if (operationEpoch !== sessionEpoch.current) return null;
       clearSession();
       setError(errorMessage(error, 'Authentication failed. Please try again.'));
       return null;
     }
-  }, [clearSession, scheduleRefresh, setError, setStep]);
+  }, [clearSession, invalidateSessionOperations, scheduleRefresh, setError, setStep]);
 
   const register = useCallback(async (
     name: string,
@@ -261,6 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setError, setStep]);
 
   const logout = useCallback(async () => {
+    invalidateSessionOperations();
     try {
       await authApi.logout();
     } catch {
@@ -273,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         step: 'idle',
       });
     }
-  }, [clearSession]);
+  }, [clearSession, invalidateSessionOperations]);
 
   const resetStep = useCallback(() => {
     setState((previous) => ({ ...previous, step: 'idle', error: null }));

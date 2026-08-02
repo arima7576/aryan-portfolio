@@ -1,6 +1,34 @@
 import { expect, test } from '@playwright/test';
 
 async function mockAuthApi(page: import('@playwright/test').Page) {
+  let signedIn = false;
+  await page.route('**/api/v1/dashboard/summary', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        total_projects: 4,
+        active_projects: 3,
+        archived_projects: 1,
+        projects_by_status: { active: 3, archived: 1 },
+        total_tasks: 12,
+        tasks_by_status: { in_progress: 5, completed: 7 },
+        tasks_by_priority: { high: 3, medium: 9 },
+        completed_tasks: 7,
+        overdue_tasks: 1,
+        unassigned_tasks: 2,
+        completion_rate: 0.5833,
+        overdue_rate: 0.0833,
+        average_completion_time_hours: 18.5,
+        tasks_due_next_7_days: 3,
+        tasks_due_next_30_days: 8,
+        active_users: 2,
+        recent_activity_count: 6,
+        generated_at: '2026-08-02T12:00:00Z',
+        range_start: '2026-07-03T00:00:00Z',
+        range_end: '2026-08-02T12:00:00Z',
+      }),
+    });
+  });
   await page.route('**/api/v1/auth/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -19,11 +47,37 @@ async function mockAuthApi(page: import('@playwright/test').Page) {
       return;
     }
     if (url.pathname.endsWith('/refresh')) {
+      const requestStartedAuthenticated = signedIn;
+      if (!requestStartedAuthenticated) {
+        await new Promise((resolve) => setTimeout(resolve, 1_500));
+      }
+      if (requestStartedAuthenticated) {
+        await route.fulfill({
+          contentType: 'application/json',
+          headers: corsHeaders,
+          body: JSON.stringify({
+            access_token: 'test-access-token',
+            token_type: 'bearer',
+            expires_in: 900,
+            csrf_token: 'test-csrf-token',
+            user: {
+              id: 'test-user',
+              email: 'executive@example.com',
+              first_name: 'Executive',
+              last_name: 'User',
+              email_verified: true,
+              created_at: '2026-01-01T00:00:00Z',
+            },
+          }),
+        });
+        return;
+      }
       await route.fulfill({ status: 401, contentType: 'application/json', headers: corsHeaders, body: JSON.stringify({ detail: 'No active session' }) });
       return;
     }
     if (url.pathname.endsWith('/login')) {
       const body = request.postDataJSON() as { email: string; remember_me: boolean };
+      signedIn = true;
       await route.fulfill({
         contentType: 'application/json',
         headers: corsHeaders,
@@ -71,6 +125,16 @@ test('renders a direct chamber route after authenticated sign-in', async ({ page
   await signIn(page, '/executive?chamber=quant');
   await expect(page.getByRole('heading', { name: 'Quant Research' })).toBeVisible();
   await expect(page.getByText('MOCK RESEARCH DATA')).toHaveCount(0);
+});
+
+test('loads the live workspace dashboard after authenticated sign-in', async ({ page }) => {
+  await signIn(page, '/dashboard');
+  await page.waitForTimeout(1_600);
+  await expect(page.getByRole('heading', { name: 'Clarity across your operating system.' })).toBeVisible();
+  await expect(page.getByText('Active projects')).toBeVisible();
+  await expect(page.getByText('4 total projects')).toBeVisible();
+  await expect(page.getByText('Task completion')).toBeVisible();
+  await expect(page.getByText('Live backend data', { exact: true })).toBeVisible();
 });
 
 test('falls back to keyboard mode after a recognition network error', async ({ page }) => {
